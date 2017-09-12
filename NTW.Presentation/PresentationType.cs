@@ -86,8 +86,12 @@ namespace NTW.Presentation
         }
         #endregion
 
-        //заложим новый класс формирования шаблона
-        private static DataTemplate _GetControl(Application application, Type type)
+        /// <summary>
+        /// Возврашает шаблон Который предназначен для работы с данным типом.
+        /// </summary>
+        /// <param name="control">Тип данных для которого будет сформирован шаблон.</param>
+        /// <returns>Шаблон</returns>
+        private static DataTemplate GetControl(Application application, Type type)
         {
             DataTemplate template = new DataTemplate();
             template.DataType = type;
@@ -176,7 +180,7 @@ namespace NTW.Presentation
                     {
                         #region проверка наличия ресурса для данного объекта
                         if (application.TryFindResource(property.PropertyType.FullName) == null)
-                            application.Resources.Add(property.PropertyType.FullName, _GetControl(application, property.PropertyType)); 
+                            application.Resources.Add(property.PropertyType.FullName, GetControl(application, property.PropertyType)); 
                         #endregion
 
                         FrameworkElementFactory BaseContainer = new FrameworkElementFactory(typeof(Grid));
@@ -285,7 +289,7 @@ namespace NTW.Presentation
                     else //значит относится к составным объектам
                     {
                         if (application.TryFindResource(property.PropertyType.FullName) == null)
-                            application.Resources.Add(property.PropertyType.FullName, _GetControl(application, property.PropertyType));
+                            application.Resources.Add(property.PropertyType.FullName, GetControl(application, property.PropertyType));
 
                         Panel.AppendChild(CreateContent(property.Name, pAttr));
                     }
@@ -296,7 +300,7 @@ namespace NTW.Presentation
                 {
                     #region проверка наличия ресурса для данного объекта
                     if (application.TryFindResource(property.PropertyType.GetElementType().FullName) == null)
-                        application.Resources.Add(property.PropertyType.GetElementType().FullName, _GetControl(application, property.PropertyType.GetElementType()));
+                        application.Resources.Add(property.PropertyType.GetElementType().FullName, GetControl(application, property.PropertyType.GetElementType()));
                     #endregion
 
                     #region List
@@ -347,245 +351,6 @@ namespace NTW.Presentation
                 #endregion
             }
             #endregion
-
-            template.VisualTree = Panel;
-
-            return template;
-        }
-
-        /// <summary>
-        /// Возврашает шаблон Который предназначен для работы с данным типом.
-        /// </summary>
-        /// <param name="control">Тип данных для которого будет сформирован шаблон.</param>
-        /// <returns>Шаблон</returns>
-        private static DataTemplate GetControl(Type control)
-        {
-            DataTemplate template = new DataTemplate();
-            template.DataType = control;
-
-            FrameworkElementFactory Panel = new FrameworkElementFactory(typeof(StackPanel));
-            Panel.Name = "BackPanel";
-
-            //foreach (PropertyInfo p in control.GetProperties().Where(x => x.CanRead && x.CanWrite))
-            //{
-            //    var atts = System.Attribute.GetCustomAttributes(p);
-            //    var pi = System.Attribute.GetCustomAttribute(p, typeof(PresentationInfo)) as PresentationInfo;
-
-            //    #region Подпись
-            //    FrameworkElementFactory Caption = new FrameworkElementFactory(typeof(TextBlock));
-            //    Caption.SetValue(TextBlock.TextProperty, pi != null ? pi.CaptionName : p.Name);
-            //    Caption.SetValue(TextBlock.TextWrappingProperty, pi != null ? pi.PresentCaption : TextWrapping.NoWrap);
-            //    Panel.AppendChild(Caption); 
-            //    #endregion
-
-            //    #region Если строковое представление
-            //    if (SimpleTypes.Contains(p.PropertyType))
-            //    {
-            //        FrameworkElementFactory Property = new FrameworkElementFactory(typeof(TextBox));
-            //        Property.SetBinding(TextBox.TextProperty, new Binding(p.Name) { UpdateSourceTrigger = UpdateSourceTrigger.PropertyChanged });
-            //        Panel.AppendChild(Property);
-            //    } 
-            //    #endregion
-            //    #region Если является перечислением
-            //    else if (p.PropertyType.BaseType == typeof(Enum))
-            //    {
-
-            //        FrameworkElementFactory Property = new FrameworkElementFactory(typeof(ComboBox));
-            //        Property.SetResourceReference(ComboBox.DataContextProperty, p.PropertyType.FullName);
-            //        Property.SetBinding(ComboBox.ItemsSourceProperty, new Binding("."));
-            //        Property.SetBinding(ComboBox.SelectedValueProperty, new Binding("DataContext." + p.Name) { ElementName = "BackPanel", UpdateSourceTrigger = UpdateSourceTrigger.PropertyChanged });
-            //        Panel.AppendChild(Property);
-            //    } 
-            //    #endregion
-            //    #region Если относится к типу объекта отображения
-            //    else if (p.PropertyType.BaseType == typeof(IPresentation))
-            //    {
-            //        FrameworkElementFactory Property = new FrameworkElementFactory(typeof(Label));
-            //        Property.SetBinding(Label.DataContextProperty, new Binding(p.Name));
-            //        Property.SetBinding(Label.ContentProperty, new Binding("."));
-            //        Property.SetBinding(Label.ContentTemplateProperty, new Binding("Template"));
-            //        Property.SetValue(Label.HorizontalContentAlignmentProperty, System.Windows.HorizontalAlignment.Stretch);
-            //        Panel.AppendChild(Property);
-            //    } 
-            //    #endregion
-            //    #region Если является типом генерации определенного типа
-            //    else if (p.PropertyType.IsGenericType)//считаем что это коллекция
-            //    {
-            //        var collatt = atts.FirstOrDefault(x => x is PresentationCollectionInfo) as PresentationCollectionInfo;
-
-            //        FrameworkElementFactory ContainerProperty = new FrameworkElementFactory(typeof(Grid));
-
-            //        CollectionViewModel model = new CollectionViewModel(p.PropertyType.GetGenericArguments()[0]);
-
-            //        #region Grid
-            //        FrameworkElementFactory ContainerRowProperty = new FrameworkElementFactory(typeof(RowDefinition));
-            //        ContainerRowProperty.SetValue(RowDefinition.HeightProperty, new GridLength(40));
-            //        ContainerProperty.AppendChild(ContainerRowProperty);
-
-            //        FrameworkElementFactory ContainerRow1Property = new FrameworkElementFactory(typeof(RowDefinition));
-            //        ContainerRow1Property.SetValue(RowDefinition.HeightProperty, new GridLength(1, GridUnitType.Star));
-            //        ContainerProperty.AppendChild(ContainerRow1Property);
-
-            //        FrameworkElementFactory ContainerColumnProperty = new FrameworkElementFactory(typeof(ColumnDefinition));
-            //        ContainerColumnProperty.SetValue(ColumnDefinition.WidthProperty, new GridLength(1, GridUnitType.Star));
-            //        ContainerProperty.AppendChild(ContainerColumnProperty);
-
-            //        FrameworkElementFactory ContainerColumn1Property = new FrameworkElementFactory(typeof(ColumnDefinition));
-            //        ContainerColumn1Property.SetValue(ColumnDefinition.WidthProperty, new GridLength(40));
-            //        ContainerProperty.AppendChild(ContainerColumn1Property); 
-            //        #endregion
-
-            //        #region Button add
-            //        FrameworkElementFactory ButtonAddProperty = new FrameworkElementFactory(typeof(Button));
-            //        ButtonAddProperty.SetValue(Button.ContentProperty, "+");
-            //        ButtonAddProperty.SetValue(Button.DataContextProperty, model);
-            //        ButtonAddProperty.SetBinding(Button.CommandProperty, new Binding("AddCommand"));
-
-            //        if (collatt != null && collatt.AddButtonContentTemplate != null && Application.Current.TryFindResource(collatt.AddButtonContentTemplate) != null)
-            //            ButtonAddProperty.SetResourceReference(Button.ContentTemplateProperty, collatt.AddButtonContentTemplate);
-
-            //        if (SimpleTypes.Contains(p.PropertyType.GetGenericArguments()[0]))
-            //            ButtonAddProperty.SetBinding(Button.CommandParameterProperty, new Binding("DataContext") { ElementName = p.Name + "PresentList" });
-            //        else
-            //            ButtonAddProperty.SetBinding(Button.CommandParameterProperty, new Binding("ItemsSource") { ElementName = p.Name + "PresentList" });
-            //        ButtonAddProperty.SetValue(Grid.RowProperty, 0);
-
-            //        ContainerProperty.AppendChild(ButtonAddProperty);
-            //        #endregion
-
-            //        #region Button create/clear
-            //        FrameworkElementFactory ButtonNewProperty = new FrameworkElementFactory(typeof(Button));
-            //        ButtonNewProperty.Name = p.Name + "clearButton";
-            //        ButtonNewProperty.SetValue(Button.ContentProperty, "new");
-            //        ButtonNewProperty.SetValue(Button.DataContextProperty, model);
-            //        ButtonNewProperty.SetBinding(Button.CommandProperty, new Binding("ClearCommand"));
-            //        ButtonNewProperty.SetBinding(Button.CommandParameterProperty, new Binding(".") { ElementName = p.Name + "clearButton" });
-            //        ButtonNewProperty.SetValue(Grid.ColumnProperty, 1);
-
-            //        if (collatt != null && collatt.NewButtonContentTemplate != null && Application.Current.TryFindResource(collatt.NewButtonContentTemplate) != null)
-            //            ButtonNewProperty.SetResourceReference(Button.ContentTemplateProperty, collatt.NewButtonContentTemplate);
-
-            //        ContainerProperty.AppendChild(ButtonNewProperty);
-            //        #endregion
-
-            //        #region List
-            //        FrameworkElementFactory Property = new FrameworkElementFactory(typeof(ListBox));
-            //        Property.Name = p.Name + "PresentList";
-            //        Property.SetValue(ScrollViewer.HorizontalScrollBarVisibilityProperty, ScrollBarVisibility.Disabled);
-            //        Property.SetValue(Grid.ColumnSpanProperty, 2);
-            //        Property.SetValue(ListBox.HorizontalContentAlignmentProperty, System.Windows.HorizontalAlignment.Stretch);
-
-            //        #region выставление шаблона по условию является спосок из простых данных или из объектов класса
-            //        if (SimpleTypes.Contains(p.PropertyType.GetGenericArguments()[0]))
-            //        {
-            //            Property.SetResourceReference(ListBox.ItemTemplateProperty, "ItemPresentation");
-
-            //            string pp = p.Name;
-            //            Type h = p.PropertyType.GetGenericArguments()[0];
-            //            Type b = p.PropertyType;
-            //            Property.AddHandler(ListBox.LoadedEvent, new RoutedEventHandler((s, e) =>
-            //            {
-            //                var view = Activator.CreateInstance(typeof(AbstractCollectionView<>).MakeGenericType(h), null);
-
-            //                BindingOperations.SetBinding(view as DependencyObject, BaseAbstract.ItemsProperty, new Binding(pp) { Source = (s as ListBox).DataContext, Mode = BindingMode.TwoWay });
-
-            //                (s as ListBox).DataContext = view;
-            //            }));
-
-            //                Property.SetBinding(ListBox.ItemsSourceProperty, new Binding("AItems"));
-            //        }
-            //        else
-            //        {
-            //            Property.SetResourceReference(ListBox.ItemTemplateProperty, "CustomItemPresentation");
-
-            //            Property.SetBinding(ListBox.ItemsSourceProperty, new Binding(p.Name));
-            //        }
-            //        #endregion
-
-            //        Property.SetValue(Grid.RowProperty, 1);
-
-            //        ContainerProperty.AppendChild(Property);
-            //        #endregion
-
-            //        #region Отребуты управления контейнером отображения элементов
-            //        if (collatt != null)
-            //        {
-            //            if (collatt.MinHeight != 0)
-            //                ContainerProperty.SetValue(Grid.MinHeightProperty, collatt.MinHeight);
-
-            //            if (collatt.MaxHeight != 0)
-            //                ContainerProperty.SetValue(Grid.MaxHeightProperty, collatt.MaxHeight);
-
-            //            if (collatt.ItemTemplate != null && Application.Current.TryFindResource(collatt.ItemTemplate) != null)
-            //                Property.SetResourceReference(ListBox.ItemTemplateProperty, collatt.ItemTemplate);
-
-            //            if (collatt != null && collatt.ItemStyle != null && Application.Current.TryFindResource(collatt.ItemStyle) != null)
-            //                Property.SetResourceReference(ListBox.ItemContainerStyleProperty, collatt.ItemStyle);
-            //        } 
-            //        #endregion
-
-            //        Panel.AppendChild(ContainerProperty);
-            //    }
-            //    #endregion
-            //    #region если является массивом
-            //    else if (p.PropertyType.IsArray)//если используется массив строго заданного размера
-            //    {//отличий от предыдущего почти никакого только нет кнопок очистить, добавить и удалить
-            //        var collatt = atts.FirstOrDefault(x => x is PresentationCollectionInfo) as PresentationCollectionInfo;
-
-            //        #region List
-            //        FrameworkElementFactory Property = new FrameworkElementFactory(typeof(ListBox));
-            //        Property.Name = p.Name + "PresentList";
-            //        Property.SetValue(ScrollViewer.HorizontalScrollBarVisibilityProperty, ScrollBarVisibility.Disabled);
-            //        Property.SetValue(Grid.ColumnSpanProperty, 2);
-            //        Property.SetValue(ListBox.HorizontalContentAlignmentProperty, System.Windows.HorizontalAlignment.Stretch);
-            //        if (SimpleTypes.Contains(p.PropertyType.GetElementType()))
-            //        {
-            //            Property.SetResourceReference(ListBox.ItemTemplateProperty, "SItemPresentation");
-
-            //            string pp = p.Name;
-            //            Type h = p.PropertyType.GetElementType();
-            //            Property.AddHandler(ListBox.LoadedEvent, new RoutedEventHandler((s, e) =>
-            //            {
-            //                var view = Activator.CreateInstance(typeof(AbstractCollectionView<>).MakeGenericType(h), null);
-
-            //                BindingOperations.SetBinding(view as DependencyObject, AbstractCollectionView<int>.ItemsProperty, new Binding(pp) { Source = (s as ListBox).DataContext, Mode = BindingMode.TwoWay });
-
-            //                (s as ListBox).DataContext = view;
-            //            }));
-
-            //            Property.SetBinding(ListBox.ItemsSourceProperty, new Binding("AItems"));
-            //        }
-            //        else
-            //        {
-            //            Property.SetResourceReference(ListBox.ItemTemplateProperty, p.PropertyType.GetElementType().FullName);
-
-            //            Property.SetBinding(ListBox.ItemsSourceProperty, new Binding(p.Name) { Mode = BindingMode.TwoWay });
-            //        }
-
-            //        Property.SetValue(Grid.RowProperty, 1);
-
-            //        #region Отребуты управления контейнером отображения элементов
-            //        if (collatt != null)
-            //        {
-            //            if (collatt.MinHeight != 0)
-            //                Property.SetValue(Grid.MinHeightProperty, collatt.MinHeight);
-
-            //            if (collatt.MaxHeight != 0)
-            //                Property.SetValue(Grid.MaxHeightProperty, collatt.MaxHeight);
-
-            //            if (collatt.ItemTemplate != null && Application.Current.Resources.Contains(collatt.ItemTemplate))
-            //                Property.SetResourceReference(ListBox.ItemTemplateProperty, collatt.ItemTemplate);
-
-            //            if (collatt.ItemStyle != null && Application.Current.TryFindResource(collatt.ItemStyle) != null)
-            //                Property.SetResourceReference(ListBox.ItemContainerStyleProperty, collatt.ItemStyle);
-            //        }
-            //        #endregion
-
-            //        Panel.AppendChild(Property);
-            //        #endregion
-            //    }
-            //    #endregion
-            //}
 
             template.VisualTree = Panel;
 
@@ -767,7 +532,7 @@ namespace NTW.Presentation
             {
                 if (application.TryFindResource(t.FullName) == null)
                 {
-                    DataTemplate template = _GetControl(application, t);
+                    DataTemplate template = GetControl(application, t);
                     application.Resources.Add(t.FullName, template);
                 }
             }
@@ -804,7 +569,7 @@ namespace NTW.Presentation
             {
                 if (application.TryFindResource(t.FullName) == null)
                 {
-                    DataTemplate template = GetControl(t);
+                    DataTemplate template = GetControl(application, t);
                     application.Resources.Add(t.FullName, template);
                 }
             }
