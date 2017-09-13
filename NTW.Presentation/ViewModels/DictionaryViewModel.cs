@@ -4,11 +4,14 @@ using System.Linq;
 using System.Text;
 using NTW.Commands;
 
-namespace NTW.Presentation.ViewModels
+namespace NTW.Presentation
 {
-    internal class DictionaryViewModel<TKey, TValue>:AbstractView
+    internal class DictionaryViewModel<TKey, TValue>:AbstractDictionaryView
     {
         #region Private
+        private TKey selectedKey;
+        private TValue defaultValue;
+
         private Command addCommand;
         private Command removeCommand;
         private Command clearCommand;
@@ -17,42 +20,30 @@ namespace NTW.Presentation.ViewModels
         public DictionaryViewModel() { }
 
         #region Public
-        public List<SimpleTypeItem<TKey>> Keys
+        public List<TKey> MKeys
         {
             get 
             {
-                List<SimpleTypeItem<TKey>> temp = new List<SimpleTypeItem<TKey>>();
+                List<TKey> temp = new List<TKey>();
                 if (Items != null)
                 {
-                    int index = 0;
-                    foreach(TKey item in (Items as IDictionary<TKey, TValue>).Keys)
-                    {
-                        SimpleTypeItem<TKey> obj = new SimpleTypeItem<TKey>(index, item);
-                        index++;
-                    }
+                    foreach (TKey item in (Items as IDictionary<TKey, TValue>).Keys)
+                        temp.Add(item);
                 }
                 return temp;
             }
         }
 
-        public List<SimpleTypeItem<TValue>> Values
+        public TKey SelectedKey
         {
-            get
-            {
-                List<SimpleTypeItem<TValue>> temp = new List<SimpleTypeItem<TValue>>();
+            get { return selectedKey; }
+            set { selectedKey = value; Change("Value"); }
+        }
 
-                if (Items != null)
-                {
-                    int index = 0;
-                    foreach(TValue item in (Items as IDictionary<TKey, TValue>).Values)
-                    {
-                        SimpleTypeItem<TValue> obj = new SimpleTypeItem<TValue>(index, item);
-                        index++;
-                    }
-                }
-
-                return temp;
-            }
+        public TValue Value
+        {
+            get { if(selectedKey != null && Items != null && Items.Contains(selectedKey)) return (Items as IDictionary<TKey, TValue>)[selectedKey]; else return defaultValue; }
+            set { (Items as IDictionary<TKey, TValue>)[selectedKey] = value; }
         }
         #endregion
     }

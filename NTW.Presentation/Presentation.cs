@@ -10,7 +10,7 @@ namespace NTW.Presentation
     public abstract class Presentation : IPresentation
     {
         /// <summary>
-        /// Соойство содежащае шаблон.
+        /// Соойство возврашающее шаблон.
         /// </summary>
         public object Template
         {

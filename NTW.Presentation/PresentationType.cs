@@ -174,13 +174,13 @@ namespace NTW.Presentation
                 else if (property.PropertyType.IsGenericType)//всетаки придется вынести в отдульную обработку
                 {
                     //с листом (да и со словорем) все иначе и сложнее так как есть сложная хрень с генерацией нескольких параметров
-
+                    #region IList
                     //будем определять к какому плану будет отнасится данный тип generic
                     if (property.PropertyType.GetInterface("IList") != null)//значит относится к спискам
                     {
                         #region проверка наличия ресурса для данного объекта
                         if (application.TryFindResource(property.PropertyType.FullName) == null)
-                            application.Resources.Add(property.PropertyType.FullName, GetControl(application, property.PropertyType)); 
+                            application.Resources.Add(property.PropertyType.FullName, GetControl(application, property.PropertyType));
                         #endregion
 
                         FrameworkElementFactory BaseContainer = new FrameworkElementFactory(typeof(Grid));
@@ -191,7 +191,8 @@ namespace NTW.Presentation
                         //увы, без него никак
                         Type GType = property.PropertyType.GetGenericArguments()[0];
                         string propertyName = property.Name;
-                        Container.AddHandler(ListBox.LoadedEvent, new RoutedEventHandler((s, e) => {
+                        Container.AddHandler(ListBox.LoadedEvent, new RoutedEventHandler((s, e) =>
+                        {
                             var view = Activator.CreateInstance(typeof(CollectionViewModel<>).MakeGenericType(GType), null);
                             BindingOperations.SetBinding(view as DependencyObject, AbstractView.ItemsProperty, new Binding(propertyName) { Source = ((s as Grid).Parent as Grid).DataContext, UpdateSourceTrigger = UpdateSourceTrigger.PropertyChanged });
                             (s as Grid).DataContext = view;
@@ -214,7 +215,7 @@ namespace NTW.Presentation
 
                         FrameworkElementFactory ContainerColumn1Property = new FrameworkElementFactory(typeof(ColumnDefinition));
                         ContainerColumn1Property.SetValue(ColumnDefinition.WidthProperty, new GridLength(40));
-                        Container.AppendChild(ContainerColumn1Property); 
+                        Container.AppendChild(ContainerColumn1Property);
                         #endregion
 
                         #region Button "Add"
@@ -275,24 +276,110 @@ namespace NTW.Presentation
 
                             if (pcAttr != null && pcAttr.ItemStyle != null && Application.Current.TryFindResource(pcAttr.ItemStyle) != null)
                                 List.SetResourceReference(ListBox.ItemContainerStyleProperty, pcAttr.ItemStyle);
-                        }  
+                        }
                         #endregion
 
                         BaseContainer.AppendChild(Container);
 
                         Panel.AppendChild(BaseContainer);
-                    }//конечно же отдельно обработать!
+                    }//конечно же отдельно обработать! 
+                    #endregion
+                    #region IDictionary
                     else if (property.PropertyType.GetInterface("IDictionary") != null)//если является словорем
                     {
+                        //по факту в качестве ключа и значения могут быть даже сложные классы, по этому стоит подумать как это реаргонизавать
+                        //для начала соберем макет который будет управлятся при помощи DictionaryViewModel
 
-                    }
+                        FrameworkElementFactory Container = new FrameworkElementFactory(typeof(Grid));
+
+                        #region Подгрузка
+                        Type[] generics = property.PropertyType.GetGenericArguments();
+                        string PropertyName = property.Name;
+
+                        Container.AddHandler(Grid.LoadedEvent, new RoutedEventHandler((s, e) =>
+                        {
+                            var view = Activator.CreateInstance(typeof(DictionaryViewModel<,>).MakeGenericType(generics), null);
+                            BindingOperations.SetBinding(view as DependencyObject, AbstractDictionaryView.ItemsProperty, new Binding(PropertyName) { Source = (s as Grid).DataContext, UpdateSourceTrigger = UpdateSourceTrigger.PropertyChanged });
+                            (s as Grid).DataContext = view;
+                        }));
+                        #endregion
+
+                        #region Строки и колонки
+                        FrameworkElementFactory Row1 = new FrameworkElementFactory(typeof(RowDefinition));
+                        Row1.SetValue(RowDefinition.HeightProperty, new GridLength(22));
+                        Container.AppendChild(Row1);
+
+                        FrameworkElementFactory Row2 = new FrameworkElementFactory(typeof(RowDefinition));
+                        Row2.SetValue(RowDefinition.HeightProperty, new GridLength(1, GridUnitType.Star));
+                        Container.AppendChild(Row2);
+
+                        FrameworkElementFactory Row3 = new FrameworkElementFactory(typeof(RowDefinition));
+                        Row3.SetValue(RowDefinition.HeightProperty, new GridLength(22));
+                        Container.AppendChild(Row3);
+
+                        FrameworkElementFactory Column1 = new FrameworkElementFactory(typeof(ColumnDefinition));
+                        Column1.SetValue(ColumnDefinition.WidthProperty, new GridLength(1, GridUnitType.Star));
+                        Container.AppendChild(Column1);
+
+                        FrameworkElementFactory Column2 = new FrameworkElementFactory(typeof(ColumnDefinition));
+                        Column2.SetValue(ColumnDefinition.WidthProperty, new GridLength(1, GridUnitType.Star));
+                        Container.AppendChild(Column2);
+                        #endregion
+
+                        //1. ComboBox с возможностью выбора определенного ключа с дальнейшим отображением значения по ключу
+                        #region Отборка
+                        FrameworkElementFactory Combo = new FrameworkElementFactory(typeof(ComboBox));
+                        Combo.SetValue(Grid.ColumnSpanProperty, 2);
+                        Combo.Name = "ComBo";
+                        Combo.SetBinding(ComboBox.ItemsSourceProperty, new Binding("MKeys"));
+                        Combo.SetBinding(ComboBox.SelectedItemProperty, new Binding("SelectedKey") { Mode = BindingMode.TwoWay, UpdateSourceTrigger = UpdateSourceTrigger.PropertyChanged });
+                        Container.AppendChild(Combo);
+                        #endregion
+
+                        //2. Label с шаблоном для отображения значения
+                        #region Отображение
+                        FrameworkElementFactory Lab = new FrameworkElementFactory(typeof(Label));
+                        Lab.SetValue(Grid.RowProperty, 1);
+                        Lab.SetValue(Grid.ColumnSpanProperty, 2);
+                        Lab.SetValue(Label.HorizontalContentAlignmentProperty, System.Windows.HorizontalAlignment.Stretch);
+                        Lab.SetBinding(Label.ContentProperty, new Binding(".") { UpdateSourceTrigger = UpdateSourceTrigger.PropertyChanged });
+                        //если это словарь то оно обладает двумя типами под generic и второй из них это значение
+                        if (SimpleTypes.Contains(property.PropertyType.GetGenericArguments()[1]))
+                            Lab.SetResourceReference(Label.ContentTemplateProperty, "SItemPresentation");
+                        else
+                            Lab.SetBinding(Label.ContentTemplateProperty, new Binding("Value.Template"));
+
+                        Container.AppendChild(Lab);
+                        #endregion
+
+                        //3. Button  с возможностью добавления
+                        #region Add
+                        FrameworkElementFactory Add = new FrameworkElementFactory(typeof(Button));
+                        Add.SetValue(Grid.RowProperty, 2);
+                        Add.SetValue(Button.ContentProperty, "Add");
+                        Container.AppendChild(Add);
+                        #endregion
+
+                        #region Remove
+                        FrameworkElementFactory Remove = new FrameworkElementFactory(typeof(Button));
+                        Remove.SetValue(Grid.RowProperty, 2);
+                        Remove.SetValue(Grid.ColumnProperty, 1);
+                        Remove.SetValue(Button.ContentProperty, "Remove");
+                        Container.AppendChild(Remove);
+                        #endregion
+
+                        Panel.AppendChild(Container);
+                    } 
+                    #endregion
+                    #region Simple Generic
                     else //значит относится к составным объектам
                     {
                         if (application.TryFindResource(property.PropertyType.FullName) == null)
                             application.Resources.Add(property.PropertyType.FullName, GetControl(application, property.PropertyType));
 
                         Panel.AppendChild(CreateContent(property.Name, pAttr));
-                    }
+                    } 
+                    #endregion
                 }
                 #endregion
                 #region Если относится к типу массива
@@ -328,11 +415,11 @@ namespace NTW.Presentation
                     else
                     {
                         List.SetResourceReference(ListBox.ItemTemplateProperty, "SCustomItemPresentation");
-                        //List.SetBinding(ListBox.ItemsSourceProperty, new Binding("Items"));
                     }
                     Panel.AppendChild(List);
                     #endregion
 
+                    #region Выставление атрибутов
                     if (pcAttr != null)
                     {
                         if (pcAttr.MinHeight != 0)
@@ -346,7 +433,16 @@ namespace NTW.Presentation
 
                         if (pcAttr != null && pcAttr.ItemStyle != null && Application.Current.TryFindResource(pcAttr.ItemStyle) != null)
                             List.SetResourceReference(ListBox.ItemContainerStyleProperty, pcAttr.ItemStyle);
-                    } 
+                    }  
+                    #endregion
+                }
+                #endregion
+                #region Если относится к типу interface
+                else if (property.PropertyType.IsInterface)
+                {
+                    FrameworkElementFactory Container = new FrameworkElementFactory(typeof(Label));
+                    Container.SetBinding(Label.ContentProperty, new Binding(property.Name));
+                    Panel.AppendChild(Container);
                 }
                 #endregion
             }

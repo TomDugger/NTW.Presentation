@@ -45,6 +45,7 @@
   <ItemGroup>
     <Compile Include="Attribute\PresentationCollectionInfo.cs" />
     <Compile Include="Attribute\PresentationInfo.cs" />
+    <Compile Include="Attribute\PresentationInterfaceInfo.cs" />
     <Compile Include="IPresentation.cs" />
     <Compile Include="Models\SimpleTypeItem.cs" />
     <Compile Include="Presentation.cs" />
@@ -52,6 +53,7 @@
     <Compile Include="PresentationType.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="ViewModels\AbstractCollectionView.cs" />
+    <Compile Include="ViewModels\AbstractDictionaryView.cs" />
     <Compile Include="ViewModels\CollectionViewModel.cs" />
     <Compile Include="ViewModels\DictionaryViewModel.cs" />
   </ItemGroup>
