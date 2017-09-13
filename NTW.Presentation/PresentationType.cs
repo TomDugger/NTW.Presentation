@@ -342,12 +342,17 @@ namespace NTW.Presentation
                         Lab.SetValue(Grid.RowProperty, 1);
                         Lab.SetValue(Grid.ColumnSpanProperty, 2);
                         Lab.SetValue(Label.HorizontalContentAlignmentProperty, System.Windows.HorizontalAlignment.Stretch);
-                        Lab.SetBinding(Label.ContentProperty, new Binding(".") { UpdateSourceTrigger = UpdateSourceTrigger.PropertyChanged });
                         //если это словарь то оно обладает двумя типами под generic и второй из них это значение
                         if (SimpleTypes.Contains(property.PropertyType.GetGenericArguments()[1]))
+                        {
+                            Lab.SetBinding(Label.ContentProperty, new Binding(".") { UpdateSourceTrigger = UpdateSourceTrigger.PropertyChanged });
                             Lab.SetResourceReference(Label.ContentTemplateProperty, "SItemPresentation");
+                        }
                         else
+                        {
+                            Lab.SetBinding(Label.ContentProperty, new Binding("Value") { UpdateSourceTrigger = UpdateSourceTrigger.PropertyChanged });
                             Lab.SetBinding(Label.ContentTemplateProperty, new Binding("Value.Template"));
+                        }
 
                         Container.AppendChild(Lab);
                         #endregion
