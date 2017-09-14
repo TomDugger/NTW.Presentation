@@ -47,6 +47,7 @@
     <Compile Include="Attribute\PresentationInfo.cs" />
     <Compile Include="Attribute\PresentationInterfaceInfo.cs" />
     <Compile Include="IPresentation.cs" />
+    <Compile Include="Models\Result.cs" />
     <Compile Include="Models\SimpleTypeItem.cs" />
     <Compile Include="Presentation.cs" />
     <Compile Include="PresentationEnum.cs" />

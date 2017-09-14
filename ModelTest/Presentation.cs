@@ -18,60 +18,62 @@ namespace ModelTest
 
     public class APresentation : Presentation
     {
-        //[PresentationInfo(CaptionName = "Наименование", PresentCaption = TextWrapping.Wrap)]
-        //public string Name { get; set; }
+        [PresentationInfo(CaptionName = "Наименование", PresentCaption = TextWrapping.Wrap)]
+        public string Name { get; set; }
 
-        //[PresentationInfo(CaptionName = "Некое значение", PresentCaption = TextWrapping.NoWrap)]
-        //public int Value { get; set; }
+        [PresentationInfo(CaptionName = "Некое значение", PresentCaption = TextWrapping.NoWrap)]
+        public int Value { get; set; }
 
-        //[PresentationInfo(CaptionName = "Свойство типа interface", PresentCaption = TextWrapping.Wrap)]
-        //public IMy My { get; set; }
-        //[PresentationInfo(CaptionName = "Просто перечисление", PresentCaption = TextWrapping.NoWrap)]
-        //public Aenum Enum { get; set; }
+        [PresentationInfo(CaptionName = "Свойство типа interface", PresentCaption = TextWrapping.Wrap)]
+        public IMy My { get; set; }
+        [PresentationInfo(CaptionName = "Просто перечисление", PresentCaption = TextWrapping.NoWrap)]
+        public Aenum Enum { get; set; }
 
         public Dictionary<int, PresentationItem> dictionary { get; set; }
 
-        //[PresentationCollectionInfo(MaxHeight = 50)]
-        //public PresentationItem[] ArrayPresentationItems { get; set; }
+        public Dictionary<string, PresentationItem> dictionary2 { get; set; }
 
-        //[PresentationCollectionInfo(MaxHeight = 50)]
-        //public PresentationGeneric<int, int>[] ArrayGeneric { get; set; }
+        [PresentationCollectionInfo(MaxHeight = 50)]
+        public PresentationItem[] ArrayPresentationItems { get; set; }
 
-        //[PresentationInfo(CaptionName = "Допэлемент", PresentCaption = TextWrapping.NoWrap)]
-        //public PresentationItem Item { get; set; }
+        [PresentationCollectionInfo(MaxHeight = 50)]
+        public PresentationGeneric<int, int>[] ArrayGeneric { get; set; }
 
-        //public PresentationGeneric<int, string> GItem { get; set; }
+        [PresentationInfo(CaptionName = "Допэлемент", PresentCaption = TextWrapping.NoWrap)]
+        public PresentationItem Item { get; set; }
 
-        //[PresentationCollectionInfo(MaxHeight = 100)]
-        //public List<PresentationGeneric<double, long>> ListGItems { get; set; }
+        public PresentationGeneric<int, string> GItem { get; set; }
 
-        //public List<PresentationGeneric<int, int>> ListG2Items { get; set; }
+        [PresentationCollectionInfo(MaxHeight = 100)]
+        public List<PresentationGeneric<double, long>> ListGItems { get; set; }
 
-        //[PresentationInfo(CaptionName = "Массив генерации двойного типа", PresentCaption = TextWrapping.NoWrap)]
-        //public PresentationGeneric<string, double>[] ArrayGItems { get; set; }
+        public List<PresentationGeneric<int, int>> ListG2Items { get; set; }
 
-        //[PresentationInfo(CaptionName = "Повторная копия объекта с пустыми свойствами", PresentCaption = TextWrapping.NoWrap)]
-        //public APresentation CurrentItem { get; set; }
+        [PresentationInfo(CaptionName = "Массив генерации двойного типа", PresentCaption = TextWrapping.NoWrap)]
+        public PresentationGeneric<string, double>[] ArrayGItems { get; set; }
 
-        //[PresentationCollectionInfo(MinHeight = 100, MaxHeight = 200, AddButtonContentTemplate = "AddTemplate", ClearButtonContentTemplate = "NewTemplate")]
-        //[PresentationInfo(CaptionName = "Список чисел (int)", PresentCaption = TextWrapping.NoWrap)]
-        //public List<int> List { get; set; }
+        [PresentationInfo(CaptionName = "Повторная копия объекта с пустыми свойствами", PresentCaption = TextWrapping.NoWrap)]
+        public APresentation CurrentItem { get; set; }
 
-        //[PresentationInfo(CaptionName = "Представление ObservableCollection типа int", PresentCaption = TextWrapping.NoWrap)]
-        //public ObservableCollection<int> Collection { get; set; }
+        [PresentationCollectionInfo(MinHeight = 100, MaxHeight = 200, AddButtonContentTemplate = "AddTemplate", ClearButtonContentTemplate = "NewTemplate")]
+        [PresentationInfo(CaptionName = "Список чисел (int)", PresentCaption = TextWrapping.NoWrap)]
+        public List<int> List { get; set; }
 
-        //[PresentationInfo(CaptionName = "Собственный список наследованный от IList", PresentCaption = TextWrapping.NoWrap)]
-        //public PresentationList<PresentationItem> PList { get; set; }
+        [PresentationInfo(CaptionName = "Представление ObservableCollection типа int", PresentCaption = TextWrapping.NoWrap)]
+        public ObservableCollection<int> Collection { get; set; }
 
-        //[PresentationCollectionInfo(MinHeight = 100, MaxHeight = 300)]
-        //[PresentationInfo(CaptionName = "Список Собственных объектов", PresentCaption = TextWrapping.NoWrap)]
-        //public List<PresentationItem> Items { get; set; }
+        [PresentationInfo(CaptionName = "Собственный список наследованный от IList", PresentCaption = TextWrapping.NoWrap)]
+        public PresentationList<PresentationItem> PList { get; set; }
 
-        //[PresentationInfo(CaptionName = "Собственные объекты в виде массива", PresentCaption = TextWrapping.NoWrap)]
-        //public PresentationItem[] Items1 { get; set; }
+        [PresentationCollectionInfo(MinHeight = 100, MaxHeight = 300)]
+        [PresentationInfo(CaptionName = "Список Собственных объектов", PresentCaption = TextWrapping.NoWrap)]
+        public List<PresentationItem> Items { get; set; }
 
-        //[PresentationInfo(CaptionName = "Простой массив целых чисел", PresentCaption = TextWrapping.Wrap)]
-        //public int[] Items2 { get; set; }
+        [PresentationInfo(CaptionName = "Собственные объекты в виде массива", PresentCaption = TextWrapping.NoWrap)]
+        public PresentationItem[] Items1 { get; set; }
+
+        [PresentationInfo(CaptionName = "Простой массив целых чисел", PresentCaption = TextWrapping.Wrap)]
+        public int[] Items2 { get; set; }
     }
 
     public class PresentationItem : Presentation

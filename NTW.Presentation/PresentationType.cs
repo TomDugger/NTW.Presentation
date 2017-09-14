@@ -330,7 +330,6 @@ namespace NTW.Presentation
                         #region Отборка
                         FrameworkElementFactory Combo = new FrameworkElementFactory(typeof(ComboBox));
                         Combo.SetValue(Grid.ColumnSpanProperty, 2);
-                        Combo.Name = "ComBo";
                         Combo.SetBinding(ComboBox.ItemsSourceProperty, new Binding("MKeys"));
                         Combo.SetBinding(ComboBox.SelectedItemProperty, new Binding("SelectedKey") { Mode = BindingMode.TwoWay, UpdateSourceTrigger = UpdateSourceTrigger.PropertyChanged });
                         Container.AppendChild(Combo);
@@ -362,6 +361,7 @@ namespace NTW.Presentation
                         FrameworkElementFactory Add = new FrameworkElementFactory(typeof(Button));
                         Add.SetValue(Grid.RowProperty, 2);
                         Add.SetValue(Button.ContentProperty, "Add");
+                        Add.SetBinding(Button.CommandProperty, new Binding("AddCommand"));
                         Container.AppendChild(Add);
                         #endregion
 
@@ -370,6 +370,7 @@ namespace NTW.Presentation
                         Remove.SetValue(Grid.RowProperty, 2);
                         Remove.SetValue(Grid.ColumnProperty, 1);
                         Remove.SetValue(Button.ContentProperty, "Remove");
+                        Remove.SetBinding(Button.CommandProperty, new Binding("RemoveCommand"));
                         Container.AppendChild(Remove);
                         #endregion
 
@@ -501,8 +502,8 @@ namespace NTW.Presentation
             RemoveButton.Name = "removeButton";
             RemoveButton.SetValue(Button.ContentProperty, "x");
             //RemoveButton.SetValue(Button.DataContextProperty, new CollectionViewModel());
-            RemoveButton.SetBinding(Button.CommandProperty, new Binding("RemoveCommand"));
-            RemoveButton.SetBinding(Button.CommandParameterProperty, new Binding(".") { ElementName = "removeButton" });
+            RemoveButton.SetBinding(Button.CommandProperty, new Binding("DataContext.RemoveCommand") { RelativeSource = new RelativeSource(RelativeSourceMode.FindAncestor, typeof(Grid), 3) });
+            RemoveButton.SetBinding(Button.CommandParameterProperty, new Binding("DataContext.Value") { ElementName = "removeButton" });
             RemoveButton.SetValue(Grid.ColumnProperty, 1);
             ContainerProperty.AppendChild(RemoveButton);
 
