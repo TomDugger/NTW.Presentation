@@ -15,7 +15,8 @@ namespace ModelTest
     {
         public Dictionary<int, PresentationItem> dictionary { get; set; }
     }
-
+    [PresentationMarginInfo(LeftRight = 50)]
+    [PresentationPaddingInfo(All = 50)]
     public class APresentation : Presentation
     {
         [PresentationInfo(CaptionName = "Наименование", PresentCaption = TextWrapping.Wrap)]
@@ -24,8 +25,11 @@ namespace ModelTest
         [PresentationInfo(CaptionName = "Некое значение", PresentCaption = TextWrapping.NoWrap)]
         public int Value { get; set; }
 
+        [PresentationMarginInfo(Top = 50)]
         [PresentationInfo(CaptionName = "Свойство типа interface", PresentCaption = TextWrapping.Wrap)]
         public IMy My { get; set; }
+
+        [PresentationMarginInfo(Top = 50)]
         [PresentationInfo(CaptionName = "Просто перечисление", PresentCaption = TextWrapping.NoWrap)]
         public Aenum Enum { get; set; }
 
@@ -52,8 +56,8 @@ namespace ModelTest
         [PresentationInfo(CaptionName = "Массив генерации двойного типа", PresentCaption = TextWrapping.NoWrap)]
         public PresentationGeneric<string, double>[] ArrayGItems { get; set; }
 
-        [PresentationInfo(CaptionName = "Повторная копия объекта с пустыми свойствами", PresentCaption = TextWrapping.NoWrap)]
-        public APresentation CurrentItem { get; set; }
+        //[PresentationInfo(CaptionName = "Повторная копия объекта с пустыми свойствами", PresentCaption = TextWrapping.NoWrap)]
+        //public APresentation CurrentItem { get; set; }
 
         [PresentationCollectionInfo(MinHeight = 100, MaxHeight = 200, AddButtonContentTemplate = "AddTemplate", ClearButtonContentTemplate = "NewTemplate")]
         [PresentationInfo(CaptionName = "Список чисел (int)", PresentCaption = TextWrapping.NoWrap)]
@@ -287,12 +291,12 @@ namespace ModelTest
     public class My3 : Presentation, IMy
     {
         #region Private
-        private string name = "Name1";
-        private int value = 0;
+        private string name = "Name3";
+        private Guid value = Guid.NewGuid();
         #endregion
 
         #region Public
-        public int Value
+        public Guid Value
         {
             get { return this.value; }
             set { this.value = value; }

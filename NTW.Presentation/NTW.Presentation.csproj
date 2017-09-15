@@ -43,9 +43,11 @@
     <Reference Include="WindowsBase" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Attribute\PresentationMarginInfo.cs" />
     <Compile Include="Attribute\PresentationCollectionInfo.cs" />
     <Compile Include="Attribute\PresentationInfo.cs" />
     <Compile Include="Attribute\PresentationInterfaceInfo.cs" />
+    <Compile Include="Attribute\PresentationPaddingInfo.cs" />
     <Compile Include="IPresentation.cs" />
     <Compile Include="Models\Result.cs" />
     <Compile Include="Models\SimpleTypeItem.cs" />

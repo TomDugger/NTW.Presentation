@@ -30,7 +30,8 @@ namespace NTW.Presentation
             typeof(ulong), 
             typeof(short), 
             typeof(ushort), 
-            typeof(string) 
+            typeof(string), 
+            typeof(Guid)
         };
 
         /// <summary>
@@ -81,7 +82,6 @@ namespace NTW.Presentation
             Property.SetBinding(Label.ContentProperty, new Binding("."));
             Property.SetBinding(Label.ContentTemplateProperty, new Binding("Template"));
             Property.SetValue(Label.HorizontalContentAlignmentProperty, System.Windows.HorizontalAlignment.Stretch);
-
             return Property;
         }
         #endregion
@@ -95,10 +95,15 @@ namespace NTW.Presentation
         {
             DataTemplate template = new DataTemplate();
             template.DataType = type;
+            PresentationMarginInfo pmi = System.Attribute.GetCustomAttributes(type).ToList().Find((x) => x is PresentationMarginInfo) as PresentationMarginInfo;
+            PresentationPaddingInfo ppi = System.Attribute.GetCustomAttributes(type).ToList().Find((x) => x is PresentationPaddingInfo) as PresentationPaddingInfo;
 
             #region Основа (контейнер) в которую будут вкладыватся элементы
             FrameworkElementFactory Panel = new FrameworkElementFactory(typeof(StackPanel));
             Panel.Name = "BackPanel"; //на всякий случай дадим имя - мало ли придется обратится к контексту данных
+
+            Panel.SetValue(StackPanel.MarginProperty, GetThickness(pmi));
+            Panel.SetValue(Control.PaddingProperty, GetThickness(ppi));
 
             foreach (PropertyInfo property in type.GetProperties().Where(x => x.Name != "Template"))//откличм условие так как возможно управление способом привязки
             {
@@ -107,9 +112,13 @@ namespace NTW.Presentation
 
                 PresentationInfo pAttr = attributes.Find((x) => x is PresentationInfo) as PresentationInfo;
                 PresentationCollectionInfo pcAttr = attributes.Find((x) => x is PresentationCollectionInfo) as PresentationCollectionInfo;
+                PresentationMarginInfo pmAttr = attributes.Find((x) => x is PresentationMarginInfo) as PresentationMarginInfo;
 
+                //так невозможно управлять одновременно и подписью и контентом то обернемих в общий контейнер
+                FrameworkElementFactory ContainerPanel = new FrameworkElementFactory(typeof(StackPanel));
+                ContainerPanel.SetValue(TextBlock.MarginProperty, GetThickness(pmAttr));
                 //формируем подпись свойства
-                Panel.AppendChild(CreateCaption(property.Name, pAttr));
+                ContainerPanel.AppendChild(CreateCaption(property.Name, pAttr));
 
                 //подставляем возможные варианты отображения свойства
                 //1.  если является простым типом данных
@@ -118,6 +127,7 @@ namespace NTW.Presentation
                 {
                     //можно просто текст бокс сделать c проверкой отработки поля
                     FrameworkElementFactory Property;
+
                     if (!property.CanWrite)
                     {
                         Property = new FrameworkElementFactory(typeof(TextBlock));
@@ -135,7 +145,7 @@ namespace NTW.Presentation
                         });
                     }
 
-                    Panel.AppendChild(Property);
+                    ContainerPanel.AppendChild(Property);
                 } 
                 #endregion
                 #region Если является перечислением
@@ -161,13 +171,13 @@ namespace NTW.Presentation
                         });
                     }
 
-                    Panel.AppendChild(Property);
+                    ContainerPanel.AppendChild(Property);
                 }
                 #endregion
                 #region Если относится к типу "Представления"
                 else if (property.PropertyType.BaseType == typeof(Presentation) && !property.PropertyType.IsGenericType)//будем определять в составе Generic
                 {
-                    Panel.AppendChild(CreateContent(property.Name, pAttr));
+                    ContainerPanel.AppendChild(CreateContent(property.Name, pAttr));
                 } 
                 #endregion
                 #region Если относится к типу Generic
@@ -281,7 +291,7 @@ namespace NTW.Presentation
 
                         BaseContainer.AppendChild(Container);
 
-                        Panel.AppendChild(BaseContainer);
+                        ContainerPanel.AppendChild(BaseContainer);
                     }//конечно же отдельно обработать! 
                     #endregion
                     #region IDictionary
@@ -374,7 +384,7 @@ namespace NTW.Presentation
                         Container.AppendChild(Remove);
                         #endregion
 
-                        Panel.AppendChild(Container);
+                        ContainerPanel.AppendChild(Container);
                     } 
                     #endregion
                     #region Simple Generic
@@ -383,7 +393,7 @@ namespace NTW.Presentation
                         if (application.TryFindResource(property.PropertyType.FullName) == null)
                             application.Resources.Add(property.PropertyType.FullName, GetControl(application, property.PropertyType));
 
-                        Panel.AppendChild(CreateContent(property.Name, pAttr));
+                        ContainerPanel.AppendChild(CreateContent(property.Name, pAttr));
                     } 
                     #endregion
                 }
@@ -398,6 +408,7 @@ namespace NTW.Presentation
 
                     #region List
                     FrameworkElementFactory List = new FrameworkElementFactory(typeof(ListBox));
+
                     List.SetValue(ScrollViewer.HorizontalScrollBarVisibilityProperty, ScrollBarVisibility.Disabled);
                     List.SetValue(ListBox.HorizontalContentAlignmentProperty, System.Windows.HorizontalAlignment.Stretch);
                     List.SetBinding(ListBox.ItemsSourceProperty, new Binding("AItems"));
@@ -422,7 +433,7 @@ namespace NTW.Presentation
                     {
                         List.SetResourceReference(ListBox.ItemTemplateProperty, "SCustomItemPresentation");
                     }
-                    Panel.AppendChild(List);
+                    ContainerPanel.AppendChild(List);
                     #endregion
 
                     #region Выставление атрибутов
@@ -447,10 +458,14 @@ namespace NTW.Presentation
                 else if (property.PropertyType.IsInterface)
                 {
                     FrameworkElementFactory Container = new FrameworkElementFactory(typeof(Label));
-                    Container.SetBinding(Label.ContentProperty, new Binding(property.Name));
-                    Panel.AppendChild(Container);
+                    Container.SetBinding(Label.DataContextProperty, new Binding(property.Name));
+                    Container.SetBinding(Label.ContentProperty, new Binding("."));
+                    Container.SetBinding(Label.ContentTemplateProperty, new Binding("Template"));
+                    ContainerPanel.AppendChild(Container);
                 }
                 #endregion
+
+                Panel.AppendChild(ContainerPanel);
             }
             #endregion
 
@@ -675,6 +690,58 @@ namespace NTW.Presentation
                     application.Resources.Add(t.FullName, template);
                 }
             }
+        }
+
+        private static Thickness GetThickness(PresentationMarginInfo pmAttr)
+        {
+            Thickness th = new Thickness();
+            if (pmAttr != null)
+            {
+                double l = 0, t = 0, r = 0, b = 0;
+                //и так, разбераем все по этапно с последовательностью проверки от еденичного значения к двочно и общему
+                if (pmAttr.All != 0)
+                    l = t = r = b = pmAttr.All;
+                else if (pmAttr.LeftRight != 0 || pmAttr.TopButtom != 0)
+                {
+                    if (pmAttr.LeftRight != 0)
+                        l = r = pmAttr.LeftRight;
+
+                    if (pmAttr.TopButtom != 0)
+                        t = b = pmAttr.TopButtom;
+                }
+                else
+                {
+                    l = pmAttr.Left; t = pmAttr.Top; r = pmAttr.Right; b = pmAttr.Buttom;
+                }
+                th = new Thickness(l, t, r, b);
+            }
+            return th;
+        }
+
+        private static Thickness GetThickness(PresentationPaddingInfo pmAttr)
+        {
+            Thickness th = new Thickness();
+            if (pmAttr != null)
+            {
+                double l = 0, t = 0, r = 0, b = 0;
+                //и так, разбераем все по этапно с последовательностью проверки от еденичного значения к двочно и общему
+                if (pmAttr.All != 0)
+                    l = t = r = b = pmAttr.All;
+                else if (pmAttr.LeftRight != 0 || pmAttr.TopButtom != 0)
+                {
+                    if (pmAttr.LeftRight != 0)
+                        l = r = pmAttr.LeftRight;
+
+                    if (pmAttr.TopButtom != 0)
+                        t = b = pmAttr.TopButtom;
+                }
+                else
+                {
+                    l = pmAttr.Left; t = pmAttr.Top; r = pmAttr.Right; b = pmAttr.Buttom;
+                }
+                th = new Thickness(l, t, r, b);
+            }
+            return th;
         }
     }
 }

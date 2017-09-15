@@ -1,14 +1,7 @@
 D:\NWT\Для тестов\ModelTest\NTW.Presentation\bin\Debug\NTW.Presentation.dll
 D:\NWT\Для тестов\ModelTest\NTW.Presentation\bin\Debug\NTW.Presentation.pdb
-D:\NWT\Для тестов\ModelTest\NTW.Presentation\obj\Debug\NTW.Presentation.dll
-D:\NWT\Для тестов\ModelTest\NTW.Presentation\obj\Debug\NTW.Presentation.pdb
 D:\NWT\Для тестов\ModelTest\NTW.Presentation\bin\Debug\NTW.Commands.dll
 D:\NWT\Для тестов\ModelTest\NTW.Presentation\bin\Debug\NTW.Commands.pdb
 D:\NWT\Для тестов\ModelTest\NTW.Presentation\obj\Debug\NTW.Presentation.csprojResolveAssemblyReference.cache
-G:\ModelTest\NTW.Presentation\bin\Debug\NTW.Presentation.dll
-G:\ModelTest\NTW.Presentation\bin\Debug\NTW.Presentation.pdb
-G:\ModelTest\NTW.Presentation\bin\Debug\NTW.Commands.dll
-G:\ModelTest\NTW.Presentation\bin\Debug\NTW.Commands.pdb
-G:\ModelTest\NTW.Presentation\obj\Debug\NTW.Presentation.csprojResolveAssemblyReference.cache
-G:\ModelTest\NTW.Presentation\obj\Debug\NTW.Presentation.dll
-G:\ModelTest\NTW.Presentation\obj\Debug\NTW.Presentation.pdb
+D:\NWT\Для тестов\ModelTest\NTW.Presentation\obj\Debug\NTW.Presentation.dll
+D:\NWT\Для тестов\ModelTest\NTW.Presentation\obj\Debug\NTW.Presentation.pdb

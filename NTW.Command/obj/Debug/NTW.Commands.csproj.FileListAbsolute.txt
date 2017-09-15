@@ -1,9 +1,5 @@
 D:\NWT\Для тестов\ModelTest\NTW.Command\bin\Debug\NTW.Commands.dll
 D:\NWT\Для тестов\ModelTest\NTW.Command\bin\Debug\NTW.Commands.pdb
+D:\NWT\Для тестов\ModelTest\NTW.Command\obj\Debug\NTW.Commands.csprojResolveAssemblyReference.cache
 D:\NWT\Для тестов\ModelTest\NTW.Command\obj\Debug\NTW.Commands.dll
 D:\NWT\Для тестов\ModelTest\NTW.Command\obj\Debug\NTW.Commands.pdb
-G:\ModelTest\NTW.Command\bin\Debug\NTW.Commands.dll
-G:\ModelTest\NTW.Command\bin\Debug\NTW.Commands.pdb
-G:\ModelTest\NTW.Command\obj\Debug\NTW.Commands.csprojResolveAssemblyReference.cache
-G:\ModelTest\NTW.Command\obj\Debug\NTW.Commands.dll
-G:\ModelTest\NTW.Command\obj\Debug\NTW.Commands.pdb

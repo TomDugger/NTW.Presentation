@@ -57,7 +57,6 @@ namespace ModelTest
                 List = new List<int> { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15 },
                 Collection = new System.Collections.ObjectModel.ObservableCollection<int>() { 1, 2, 3, 4, 5 },
                 Items = new List<PresentationItem>(),
-                CurrentItem = new APresentation(),
                 Items1 = new PresentationItem[] { new PresentationItem() },
                 Items2 = new int[] { 1, 2, 3, 4, 5, 6 } 
             };
@@ -70,11 +69,23 @@ namespace ModelTest
 
             this.DataContext = new APresentation();
             this.DataContext = p;
+
+            Label l = new Label();
+            l.Padding = new Thickness();
         }
 
         private void Button_Click(object sender, RoutedEventArgs e)
         {
             var i = this.DataContext;
+            if ((i as APresentation).My is My1)
+                (i as APresentation).My = new My2();
+            else if ((i as APresentation).My is My2)
+                (i as APresentation).My = new My3();
+            else if ((i as APresentation).My is My3)
+                (i as APresentation).My = new My1();
+
+            this.DataContext = null;
+            this.DataContext = i;
         }
     }
 }

@@ -1,6 +1,12 @@
 D:\NWT\Для тестов\ModelTest\ModelTest\bin\Debug\ModelTest.exe
 D:\NWT\Для тестов\ModelTest\ModelTest\bin\Debug\ModelTest.pdb
+D:\NWT\Для тестов\ModelTest\ModelTest\bin\Debug\NTW.Presentation.dll
+D:\NWT\Для тестов\ModelTest\ModelTest\bin\Debug\NTW.Commands.dll
+D:\NWT\Для тестов\ModelTest\ModelTest\bin\Debug\NTW.Presentation.pdb
+D:\NWT\Для тестов\ModelTest\ModelTest\bin\Debug\NTW.Commands.pdb
+D:\NWT\Для тестов\ModelTest\ModelTest\obj\x86\Debug\ModelTest.csprojResolveAssemblyReference.cache
 D:\NWT\Для тестов\ModelTest\ModelTest\obj\x86\Debug\MainWindow.baml
+D:\NWT\Для тестов\ModelTest\ModelTest\obj\x86\Debug\App.baml
 D:\NWT\Для тестов\ModelTest\ModelTest\obj\x86\Debug\MainWindow.g.cs
 D:\NWT\Для тестов\ModelTest\ModelTest\obj\x86\Debug\App.g.cs
 D:\NWT\Для тестов\ModelTest\ModelTest\obj\x86\Debug\ModelTest_MarkupCompile.cache
@@ -9,26 +15,3 @@ D:\NWT\Для тестов\ModelTest\ModelTest\obj\x86\Debug\ModelTest.Propertie
 D:\NWT\Для тестов\ModelTest\ModelTest\obj\x86\Debug\ModelTest.csproj.GenerateResource.Cache
 D:\NWT\Для тестов\ModelTest\ModelTest\obj\x86\Debug\ModelTest.exe
 D:\NWT\Для тестов\ModelTest\ModelTest\obj\x86\Debug\ModelTest.pdb
-D:\NWT\Для тестов\ModelTest\ModelTest\bin\Debug\NTW.Presentation.dll
-D:\NWT\Для тестов\ModelTest\ModelTest\bin\Debug\NTW.Presentation.pdb
-D:\NWT\Для тестов\ModelTest\ModelTest\obj\x86\Debug\ModelTest.csprojResolveAssemblyReference.cache
-D:\NWT\Для тестов\ModelTest\ModelTest\bin\Debug\NTW.Commands.dll
-D:\NWT\Для тестов\ModelTest\ModelTest\bin\Debug\NTW.Commands.pdb
-D:\NWT\Для тестов\ModelTest\ModelTest\obj\x86\Debug\App.baml
-G:\ModelTest\ModelTest\obj\x86\Debug\ModelTest.exe
-G:\ModelTest\ModelTest\obj\x86\Debug\ModelTest.pdb
-G:\ModelTest\ModelTest\bin\Debug\ModelTest.exe
-G:\ModelTest\ModelTest\bin\Debug\ModelTest.pdb
-G:\ModelTest\ModelTest\bin\Debug\NTW.Presentation.dll
-G:\ModelTest\ModelTest\bin\Debug\NTW.Commands.dll
-G:\ModelTest\ModelTest\bin\Debug\NTW.Presentation.pdb
-G:\ModelTest\ModelTest\bin\Debug\NTW.Commands.pdb
-G:\ModelTest\ModelTest\obj\x86\Debug\ModelTest.csprojResolveAssemblyReference.cache
-G:\ModelTest\ModelTest\obj\x86\Debug\MainWindow.baml
-G:\ModelTest\ModelTest\obj\x86\Debug\App.baml
-G:\ModelTest\ModelTest\obj\x86\Debug\MainWindow.g.cs
-G:\ModelTest\ModelTest\obj\x86\Debug\App.g.cs
-G:\ModelTest\ModelTest\obj\x86\Debug\ModelTest_MarkupCompile.cache
-G:\ModelTest\ModelTest\obj\x86\Debug\ModelTest.g.resources
-G:\ModelTest\ModelTest\obj\x86\Debug\ModelTest.Properties.Resources.resources
-G:\ModelTest\ModelTest\obj\x86\Debug\ModelTest.csproj.GenerateResource.Cache
