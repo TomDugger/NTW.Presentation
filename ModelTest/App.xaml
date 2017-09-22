@@ -3,17 +3,5 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              StartupUri="MainWindow.xaml">
     <Application.Resources>
-        <DataTemplate x:Key="NewTemplate">
-            <Grid>
-                <TextBlock Text="Clear" />
-            </Grid>
-        </DataTemplate>
-        <DataTemplate x:Key="AddTemplate">
-            <Grid>
-                <Button>
-                    <TextBlock Text="ADDDDDDDDD" />
-                </Button>
-            </Grid>
-        </DataTemplate>
     </Application.Resources>
 </Application>

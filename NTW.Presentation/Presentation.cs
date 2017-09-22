@@ -1,41 +1,16 @@
 ﻿using System.Windows;
+using System;
+using NTW.Presentation.Construction;
 
 namespace NTW.Presentation
 {
-    /// <summary>
-    /// Базовый класс абстракции представления. Требуется наследовать в собственном классе
-    /// для возможности формирования отображения.
-    /// Содержит единственное свойство, которое извлевает шаблон для класса.
-    /// </summary>
-    public abstract class Presentation : IPresentation
+    public static class Presentation 
     {
-        /// <summary>
-        /// Соойство возврашающее шаблон.
-        /// </summary>
-        public object Template
+        public static void Generation(Func<Type, bool> TypesCondition, Func<Type, bool> EnumCondition)
         {
-            get
-            {
-                string cName = this.GetType().FullName;
-                return Application.Current.TryFindResource(cName);
-            }
-        }
+            EnumBuilder.CreateDynamicResource(EnumCondition);
 
-        public static void Generation(string namespaceNameType, bool contains)
-        {
-            NTW.Presentation.PresentationType.CreateDynamicResourceSimpleClass(Application.Current, namespaceNameType, contains);
-        }
-
-        public static void Generation(string namespaceNameType, string namespaceNameEnum, bool containsType, bool containsEnum)
-        {
-            NTW.Presentation.PresentationEnum.CreateDynamicResourceEnum(Application.Current, namespaceNameEnum, containsEnum);
-            NTW.Presentation.PresentationType.CreateDynamicResourceSimpleClass(Application.Current, namespaceNameType, containsType);
-        }
-
-        public static void Generation(string[] namespaceNamesType, string[] namespaceNamesEnum)
-        {
-            NTW.Presentation.PresentationEnum.CreateDynamicResourceEnum(Application.Current, namespaceNamesEnum);
-            NTW.Presentation.PresentationType.CreateDynamicResourceSimpleClass(Application.Current, namespaceNamesType);
+            TypeBuilder.CreateDynamicResource(TypesCondition);
         }
     }
 }

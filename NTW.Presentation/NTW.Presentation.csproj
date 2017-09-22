@@ -48,12 +48,12 @@
     <Compile Include="Attribute\PresentationInfo.cs" />
     <Compile Include="Attribute\PresentationInterfaceInfo.cs" />
     <Compile Include="Attribute\PresentationPaddingInfo.cs" />
+    <Compile Include="Construction\EnumBuilder.cs" />
+    <Compile Include="Construction\TypeBuilder.cs" />
     <Compile Include="IPresentation.cs" />
     <Compile Include="Models\Result.cs" />
     <Compile Include="Models\SimpleTypeItem.cs" />
     <Compile Include="Presentation.cs" />
-    <Compile Include="PresentationEnum.cs" />
-    <Compile Include="PresentationType.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="ViewModels\AbstractCollectionView.cs" />
     <Compile Include="ViewModels\AbstractDictionaryView.cs" />

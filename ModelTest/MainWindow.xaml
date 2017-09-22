@@ -9,7 +9,7 @@
         </Grid.RowDefinitions>
         <Button Content="Refresh" Click="Button_Click" />
         <ScrollViewer Grid.Row="1">
-            <Label ContentTemplate="{Binding Template}" Content="{Binding Path=.}" HorizontalContentAlignment="Stretch" Name="Container" />
+            <Label Content="{Binding Path=.}" HorizontalContentAlignment="Stretch" Name="Container" />
         </ScrollViewer>
     </Grid>
 </Window>

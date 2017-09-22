@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using NTW.Commands;
 using NTW.Presentation.Models;
+using NTW.Presentation.Construction;
 
 namespace NTW.Presentation
 {
@@ -106,7 +107,7 @@ namespace NTW.Presentation
         private Result<object> GenerateKey()
         {
             object value = null;
-            if (PresentationType.SimpleTypes.Contains(typeof(TKey)))//значит простой тип
+            if (TypeBuilder.SimpleTypes.Contains(typeof(TKey)))//значит простой тип
             {
                 #region string
                 if (typeof(TKey) == typeof(string))

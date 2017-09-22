@@ -9,25 +9,16 @@ using System.Collections.ObjectModel;
 using System.Windows.Media;
 using System.Windows;
 
-namespace ModelTest
+namespace ModelTest.Test
 {
-    public class MyPresentation : Presentation
-    {
-        public Dictionary<int, PresentationItem> dictionary { get; set; }
-    }
     [PresentationMarginInfo(LeftRight = 50)]
-    [PresentationPaddingInfo(All = 50)]
-    public class APresentation : Presentation
+    public class Presentation
     {
         [PresentationInfo(CaptionName = "Наименование", PresentCaption = TextWrapping.Wrap)]
         public string Name { get; set; }
 
         [PresentationInfo(CaptionName = "Некое значение", PresentCaption = TextWrapping.NoWrap)]
         public int Value { get; set; }
-
-        [PresentationMarginInfo(Top = 50)]
-        [PresentationInfo(CaptionName = "Свойство типа interface", PresentCaption = TextWrapping.Wrap)]
-        public IMy My { get; set; }
 
         [PresentationMarginInfo(Top = 50)]
         [PresentationInfo(CaptionName = "Просто перечисление", PresentCaption = TextWrapping.NoWrap)]
@@ -37,10 +28,8 @@ namespace ModelTest
 
         public Dictionary<string, PresentationItem> dictionary2 { get; set; }
 
-        [PresentationCollectionInfo(MaxHeight = 50)]
         public PresentationItem[] ArrayPresentationItems { get; set; }
 
-        [PresentationCollectionInfo(MaxHeight = 50)]
         public PresentationGeneric<int, int>[] ArrayGeneric { get; set; }
 
         [PresentationInfo(CaptionName = "Допэлемент", PresentCaption = TextWrapping.NoWrap)]
@@ -48,16 +37,12 @@ namespace ModelTest
 
         public PresentationGeneric<int, string> GItem { get; set; }
 
-        [PresentationCollectionInfo(MaxHeight = 100)]
         public List<PresentationGeneric<double, long>> ListGItems { get; set; }
 
         public List<PresentationGeneric<int, int>> ListG2Items { get; set; }
 
         [PresentationInfo(CaptionName = "Массив генерации двойного типа", PresentCaption = TextWrapping.NoWrap)]
         public PresentationGeneric<string, double>[] ArrayGItems { get; set; }
-
-        //[PresentationInfo(CaptionName = "Повторная копия объекта с пустыми свойствами", PresentCaption = TextWrapping.NoWrap)]
-        //public APresentation CurrentItem { get; set; }
 
         [PresentationCollectionInfo(MinHeight = 100, MaxHeight = 200, AddButtonContentTemplate = "AddTemplate", ClearButtonContentTemplate = "NewTemplate")]
         [PresentationInfo(CaptionName = "Список чисел (int)", PresentCaption = TextWrapping.NoWrap)]
@@ -80,7 +65,7 @@ namespace ModelTest
         public int[] Items2 { get; set; }
     }
 
-    public class PresentationItem : Presentation
+    public class PresentationItem
     {
         [PresentationInfo(CaptionName = "Имя допэлемента")]
         public string ItemName { get; set; }
@@ -91,6 +76,17 @@ namespace ModelTest
         public override string ToString()
         {
             return "ItemName = " + ItemName + ", ItemValue = " + ItemValue;
+        }
+    }
+
+    public class PresentationGeneric<T, S> 
+    {
+        public T Value1 { get; set; }
+        public S Value2 { get; set; }
+
+        public override string ToString()
+        {
+            return Value1.ToString() + ", " + Value2.ToString();
         }
     }
 
@@ -190,136 +186,6 @@ namespace ModelTest
         public IEnumerator GetEnumerator()
         {
             return Values.GetEnumerator();
-        }
-
-        #endregion
-    }
-
-    public class PresentationGeneric<T, S>: Presentation
-    {
-        public T Value1 { get; set; }
-        public S Value2 { get; set; }
-
-        public override string ToString()
-        {
-            return Value1.ToString() + ", " + Value2.ToString();
-        }
-    }
-
-
-    public interface IMy
-    {
-        string Name { get; set; }
-
-        void Execute();
-    }
-
-    public class My1 : Presentation, IMy
-    {
-        #region Private
-        private string name = "Name1";
-        private double value = 0;
-        #endregion
-
-        #region Public
-        public double Value
-        {
-            get { return this.value; }
-            set { this.value = value; }
-        }
-        #endregion
-
-        #region IMy Members
-
-        public string Name
-        {
-            get
-            {
-                return name;
-            }
-            set
-            {
-                name = value;
-            }
-        }
-
-        public void Execute()
-        {
-            name += "1";
-        }
-
-        #endregion
-    }
-
-    public class My2 : Presentation, IMy
-    {
-        #region Private
-        private string name = "Name2";
-        private bool value = false;
-        #endregion
-
-        #region Public
-        public bool Value
-        {
-            get { return this.value; }
-            set { this.value = value; }
-        }
-        #endregion
-
-        #region IMy Members
-
-        public string Name
-        {
-            get
-            {
-                return name;
-            }
-            set
-            {
-                name = value;
-            }
-        }
-
-        public void Execute()
-        {
-            name += "2";
-        }
-
-        #endregion
-    }
-
-    public class My3 : Presentation, IMy
-    {
-        #region Private
-        private string name = "Name3";
-        private Guid value = Guid.NewGuid();
-        #endregion
-
-        #region Public
-        public Guid Value
-        {
-            get { return this.value; }
-            set { this.value = value; }
-        }
-        #endregion
-
-        #region IMy Members
-
-        public string Name
-        {
-            get
-            {
-                return name;
-            }
-            set
-            {
-                name = value;
-            }
-        }
-
-        public void Execute()
-        {
-            name += "3";
         }
 
         #endregion

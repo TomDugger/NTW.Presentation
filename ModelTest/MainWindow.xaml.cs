@@ -12,6 +12,7 @@ using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
 using NTW.Presentation;
+using ModelTest.Test;
 
 namespace ModelTest
 {
@@ -20,34 +21,33 @@ namespace ModelTest
     /// </summary>
     public partial class MainWindow : Window
     {
+        ModelTest.Test.Presentation p;
+
         public MainWindow()
         {
-            NTW.Presentation.Presentation.Generation("ModelTest", "ModelTest", false, false);
-
             InitializeComponent();
 
             PresentationList<PresentationItem> pl = new PresentationList<PresentationItem>();
             pl.Add(new PresentationItem());
             pl.Add(new PresentationItem());
 
-            APresentation p = new APresentation()
+            p = new Test.Presentation()
             {
-                My = new My1(),
                 Enum = Aenum.a4,
 
                 dictionary = new Dictionary<int, PresentationItem>(),
                 dictionary2 = new Dictionary<string, PresentationItem>(),
                 ArrayPresentationItems = new PresentationItem[] { 
-                    new PresentationItem() { ItemName = "item1", ItemValue = 1 }, 
-                    new PresentationItem() { ItemName = "item2", ItemValue = 2 },
-                    new PresentationItem() { ItemName = "item3", ItemValue = 3 } 
-                },
+                        new PresentationItem() { ItemName = "item1", ItemValue = 1 }, 
+                        new PresentationItem() { ItemName = "item2", ItemValue = 2 },
+                        new PresentationItem() { ItemName = "item3", ItemValue = 3 } 
+                    },
                 ArrayGeneric = new PresentationGeneric<int, int>[]
-                {
-                    new PresentationGeneric<int, int>() { Value1 = 1, Value2 = 0 },
-                    new PresentationGeneric<int, int>() { Value1 = 2, Value2 = 1 },
-                    new PresentationGeneric<int, int>() { Value1 = 3, Value2 = 2 },
-                },
+                    {
+                        new PresentationGeneric<int, int>() { Value1 = 1, Value2 = 0 },
+                        new PresentationGeneric<int, int>() { Value1 = 2, Value2 = 1 },
+                        new PresentationGeneric<int, int>() { Value1 = 3, Value2 = 2 },
+                    },
                 Item = new PresentationItem(),
                 GItem = new PresentationGeneric<int, string>() { Value1 = 123, Value2 = "123" },
                 ListGItems = new List<PresentationGeneric<double, long>> { new PresentationGeneric<double, long>() { Value1 = 0.1, Value2 = 1234 }, new PresentationGeneric<double, long>() { Value1 = 0.2, Value2 = 4321 } },
@@ -61,31 +61,13 @@ namespace ModelTest
                 Items2 = new int[] { 1, 2, 3, 4, 5, 6 } 
             };
 
-            p.dictionary.Add(1, new PresentationItem() { ItemName = "Value1", ItemValue = 12345678 });
-            p.dictionary.Add(2, new PresentationItem() { ItemName = "Value2", ItemValue = 87654321 });
-
-            p.dictionary2.Add("value1", new PresentationItem() { ItemName = "Value1", ItemValue = 12345678 });
-            p.dictionary2.Add("value2", new PresentationItem() { ItemName = "Value2", ItemValue = 87654321 });
-
-            this.DataContext = new APresentation();
             this.DataContext = p;
-
-            Label l = new Label();
-            l.Padding = new Thickness();
         }
 
         private void Button_Click(object sender, RoutedEventArgs e)
         {
-            var i = this.DataContext;
-            if ((i as APresentation).My is My1)
-                (i as APresentation).My = new My2();
-            else if ((i as APresentation).My is My2)
-                (i as APresentation).My = new My3();
-            else if ((i as APresentation).My is My3)
-                (i as APresentation).My = new My1();
-
             this.DataContext = null;
-            this.DataContext = i;
+            this.DataContext = p;
         }
     }
 }

@@ -12,5 +12,10 @@ namespace ModelTest
     /// </summary>
     public partial class App : Application
     {
+        protected override void OnStartup(StartupEventArgs e)
+        {
+            base.OnStartup(e);
+            NTW.Presentation.Presentation.Generation(t => t.Namespace == "ModelTest.Test", es => es.Namespace == "ModelTest");
+        }
     }
 }
