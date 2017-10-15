@@ -35,16 +35,21 @@ namespace NTW.Presentation.Construction
         {
             foreach (Type i in GetEnumTypes(condition))
             {
-                Application app = Application.Current;
-                if (app.Resources.FindName(i.FullName) == null)
-                {
-                    ObjectDataProvider odp = new ObjectDataProvider();
-                    odp.MethodName = "GetValues";
-                    odp.MethodParameters.Add(i);
-                    odp.ObjectType = typeof(Enum);
+                AddEnumResource(i);
+            }
+        }
 
-                    app.Resources.Add(i.FullName, odp);
-                }
+        internal static void AddEnumResource(Type i)
+        {
+            Application app = Application.Current;
+            if (app.TryFindResource(i.FullName) == null)
+            {
+                ObjectDataProvider odp = new ObjectDataProvider();
+                odp.MethodName = "GetValues";
+                odp.MethodParameters.Add(i);
+                odp.ObjectType = typeof(Enum);
+
+                app.Resources.Add(i.FullName, odp);
             }
         }
     }

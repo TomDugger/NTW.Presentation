@@ -12,5 +12,10 @@ namespace NTW.Presentation
 
             TypeBuilder.CreateDynamicResource(TypesCondition);
         }
+
+        public static void Generation(Func<Type, bool> TypesCondition)
+        {
+            TypeBuilder.CreateDynamicResource(TypesCondition);
+        }
     }
 }
