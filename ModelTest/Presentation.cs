@@ -19,6 +19,8 @@ namespace ModelTest.Test
         {
             //ValueClass = new PresentationItem();
             //presGeneric = new PresentationGeneric<int>();
+            //presGenericString = new PresentationGeneric<string>();
+            //presGenericPresentationItem = new PresentationGeneric<PresentationItem>() { Value = new PresentationItem() { ItemName = "name", ItemValue = 10.25}, Value2 = "dasdasd" };
             //presGeneric1 = new PresentationGeneric<int, PresentationGeneric<bool>>() { Value2 = new PresentationGeneric<bool>() };
             //ValueArrayInt = new int[] { 0, 1, 2, 3, 4, 5 };
             //ValueArrayUInt = new uint[] { 0, 1, 2, 3, 4, 5 };
@@ -36,15 +38,9 @@ namespace ModelTest.Test
             //ValueArrayBool = new bool[] { false, true, false, true, false };
             //ValueArrayEnum = new Aenum[] { Aenum.a1, Aenum.a2, Aenum.a1, Aenum.a4 };
 
-            //ValueArrayPresentationItem = new PresentationItem[] { 
-            //    new PresentationItem() { ItemName = "Новое имя", ItemValue = 1.0 },
-            //    new PresentationItem() { ItemName = "Новое имя 2", ItemValue = 2.5 }
-            //};
 
-            //ValueArrayPresentationGenericInt = new PresentationGeneric<int>[] { 
-            //    new PresentationGeneric<int>() { Value = 1232 },
-            //    new PresentationGeneric<int>() { Value = 3214 },
-            //};
+            //ValueArrayPresentationItem = new PresentationItem[Application.Current.Resources.Count];
+            //ValueArrayPresentationGenericInt = new PresentationGeneric<int>[Application.Current.Resources.Count];
 
             //ValueListInt = new List<int>() { 1, 2, 3, 4, 5, 6 };
 
@@ -75,13 +71,36 @@ namespace ModelTest.Test
             //ValueDictionaryStringString.Add(1, 152);
             //ValueDictionaryStringString.Add(2, 854);
 
-            ValueDictionaryDoublePresentationItem = new Dictionary<double, PresentationItem>();
-            ValueDictionaryDoublePresentationItem.Add(10.1, new PresentationItem() { ItemName = "Item 1", ItemValue = 10.1});
-            ValueDictionaryDoublePresentationItem.Add(20.2, new PresentationItem() { ItemName = "Item 2", ItemValue = 20.2 });
+            //ValueDictionaryDoublePresentationItem = new Dictionary<double, PresentationItem>();
+            //ValueDictionaryDoublePresentationItem.Add(10.1, new PresentationItem() { ItemName = "Item 1", ItemValue = 10.1 });
+            //ValueDictionaryDoublePresentationItem.Add(20.2, new PresentationItem() { ItemName = "Item 2", ItemValue = 20.2 });
 
-            ValueDictionaryDoublePresentationItem2 = new Dictionary<double, PresentationItem>();
-            ValueDictionaryDoublePresentationItem2.Add(10.1, new PresentationItem() { ItemName = "Item 11", ItemValue = 10.1 });
-            ValueDictionaryDoublePresentationItem2.Add(20.2, new PresentationItem() { ItemName = "Item 12", ItemValue = 20.2 });
+            //ValueDictionaryDoublePresentationItem2 = new Dictionary<double, PresentationItem>();
+            //ValueDictionaryDoublePresentationItem2.Add(10.1, new PresentationItem() { ItemName = "Item 11", ItemValue = 10.1 });
+            //ValueDictionaryDoublePresentationItem2.Add(20.2, new PresentationItem() { ItemName = "Item 12", ItemValue = 20.2 });
+
+            //ValueDictionaryPresentationItemPresentationListString = new Dictionary<PresentationItem, PresentationList<string>>();
+            //ValueDictionaryPresentationItemPresentationListString.Add(new PresentationItem() { ItemName = "Item 1", ItemValue = 10.1 }, new PresentationList<string>());
+
+
+            int i = 0;
+            foreach (var key in Application.Current.Resources.Keys)
+            {
+                //ValueArrayPresentationItem[i] = new PresentationItem() { ItemName = key.ToString(), ItemValue = i * 0.158 };
+                //ValueArrayPresentationGenericInt[i] = new PresentationGeneric<int>() { Value = i * 5 };
+                //ValueListInt.Add(i);
+                //ValueListPresentationItem.Add(new PresentationItem() { ItemName = key.ToString(), ItemValue = i });
+
+                //ValueGenericListString.Add(key.ToString());
+                //ValueGenericListPresentationItem.Add(new PresentationItem() { ItemName = key.ToString(), ItemValue = i });
+                //ValueGenericLisPresentationGenericInt.Add(new PresentationGeneric<int>() { Value = i, Value2 = key.ToString() });
+
+                //ValueDictionaryStringString.Add(i, Application.Current.Resources.Keys.Count - i);
+                //ValueDictionaryDoublePresentationItem.Add(i, new PresentationItem() { ItemName = key.ToString(), ItemValue = i });
+                //ValueDictionaryDoublePresentationItem2.Add(i, new PresentationItem() { ItemName = key.ToString(), ItemValue = i });
+                //ValueDictionaryPresentationItemPresentationListString.Add(new PresentationItem() { ItemName = key.ToString(), ItemValue = i}, new PresentationList<string>() { });
+                i++;
+            }
         }
 
         #region Simple
@@ -118,6 +137,8 @@ namespace ModelTest.Test
 
         #region Generic
         //public PresentationGeneric<int> presGeneric { get; set; }
+        //public PresentationGeneric<string> presGenericString { get; set; }
+        //public PresentationGeneric<PresentationItem> presGenericPresentationItem { get; set; }
 
         //public PresentationGeneric<int, PresentationGeneric<bool>> presGeneric1 { get; set; } 
         #endregion
@@ -181,9 +202,15 @@ namespace ModelTest.Test
         #region Dictionary
         //public Dictionary<int, int> ValueDictionaryStringString { get; set; }
 
-        public Dictionary<double, PresentationItem> ValueDictionaryDoublePresentationItem { get; set; }
+        //public Dictionary<double, PresentationItem> ValueDictionaryDoublePresentationItem { get; set; }
 
-        public Dictionary<double, PresentationItem> ValueDictionaryDoublePresentationItem2 { get; set; }
+        //public Dictionary<double, PresentationItem> ValueDictionaryDoublePresentationItem2 { get; set; }
+
+        //public Dictionary<PresentationItem, PresentationList<string>> ValueDictionaryPresentationItemPresentationListString { get; set; }
+        #endregion
+
+        #region Commands
+        //public Command Commanda { get; set; }
         #endregion
 
         //[PresentationMarginInfo(Top = 50)]
@@ -279,6 +306,8 @@ namespace ModelTest.Test
     public class PresentationGeneric<T>
     {
         public T Value { get; set; }
+
+        public string Value2 { get; set; }
     }
 
     public class PresentationGeneric<T, S> 

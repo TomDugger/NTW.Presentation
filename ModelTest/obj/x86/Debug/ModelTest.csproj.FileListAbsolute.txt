@@ -6,7 +6,6 @@ D:\NWT\Для тестов\ModelTest\ModelTest\bin\Debug\NTW.Presentation.pdb
 D:\NWT\Для тестов\ModelTest\ModelTest\bin\Debug\NTW.Commands.pdb
 D:\NWT\Для тестов\ModelTest\ModelTest\obj\x86\Debug\ModelTest.csprojResolveAssemblyReference.cache
 D:\NWT\Для тестов\ModelTest\ModelTest\obj\x86\Debug\MainWindow.baml
-D:\NWT\Для тестов\ModelTest\ModelTest\obj\x86\Debug\App.baml
 D:\NWT\Для тестов\ModelTest\ModelTest\obj\x86\Debug\MainWindow.g.cs
 D:\NWT\Для тестов\ModelTest\ModelTest\obj\x86\Debug\App.g.cs
 D:\NWT\Для тестов\ModelTest\ModelTest\obj\x86\Debug\ModelTest_MarkupCompile.cache

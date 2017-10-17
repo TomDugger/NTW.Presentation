@@ -6,43 +6,37 @@ using System.ComponentModel;
 
 namespace NTW.Presentation
 {
-    internal class KeyValue<TKey, TValue> : INotifyPropertyChanged
+    public class DataKey<TKey>: INotifyPropertyChanged
     {
         #region Private
-        private DataKey<TKey> _firstvalue;
-        private TValue _secondValue;
+        private TKey _firstvalue;
         #endregion
 
-        public KeyValue(TKey key, TValue value) {
-            _firstvalue = new DataKey<TKey>(key);
-            _secondValue = value;
+        public DataKey(TKey key)
+        {
+            _firstvalue = key;
         }
 
         #region Public
-        public DataKey<TKey> Key
+        public TKey Value
         {
-            get {
+            get
+            {
                 return _firstvalue;
             }
-            set {
+            set
+            {
                 _firstvalue = value;
                 Change("Key");
             }
         }
-
-        public TValue Value {
-            get { return _secondValue; }
-            set {
-                _secondValue = value;
-                Change("Value");
-            }
-        } 
         #endregion
 
         #region PropertyChanged
         public event PropertyChangedEventHandler PropertyChanged;
 
-        public void Change(string Property) {
+        public void Change(string Property)
+        {
             if (PropertyChanged != null)
                 PropertyChanged(this, new PropertyChangedEventArgs(Property));
         }

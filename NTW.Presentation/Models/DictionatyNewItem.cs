@@ -9,13 +9,14 @@ namespace NTW.Presentation
     public class DictionatyNewItem<TKey, TValue>: INotifyPropertyChanged
     {
         #region Private
-        private TKey _Key;
+        private DataKey<TKey> _Key;
         private TValue _Value;
         private bool _IsOpen = false;
+        private int _SelectedIndex = 0;
         #endregion
 
         public DictionatyNewItem() {
-            _Key = (TKey)CreateObject(typeof(TKey));
+            _Key = new DataKey<TKey>((TKey)CreateObject(typeof(TKey)));
             _Value = (TValue)CreateObject(typeof(TValue));
         }
 
@@ -30,9 +31,18 @@ namespace NTW.Presentation
         }
 
         #region Public
-        public TKey Key { get { return _Key; } set { _Key = value; } }
-        public TValue Value { get { return _Value; } set { _Value = value; } }
+        public DataKey<TKey> Key { get { return _Key; } set { _Key = value; Change("Key"); } }
+        public TValue Value { get { return _Value; } set { _Value = value; Change("Value"); } }
         public bool IsOpen { get { return _IsOpen; } set { _IsOpen = value; Change("IsOpen"); } }
+        public int SelectedIndex { get { return _SelectedIndex; } set { _SelectedIndex = value; Change("SelectedIndex"); } }
+        #endregion
+
+        #region Void
+        public void Default()
+        {
+            Key = new DataKey<TKey>((TKey)CreateObject(typeof(TKey)));
+            Value = (TValue)CreateObject(typeof(TValue));
+        }
         #endregion
 
         #region INotifyPropertyChanged Members

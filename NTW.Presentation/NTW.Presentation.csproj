@@ -57,6 +57,7 @@
     <Compile Include="Controls\ListGenericItemsControl.cs" />
     <Compile Include="Controls\ListItemsControl.cs" />
     <Compile Include="IPresentation.cs" />
+    <Compile Include="Models\DataKey.cs" />
     <Compile Include="Models\DictionatyNewItem.cs" />
     <Compile Include="Models\Item.cs" />
     <Compile Include="Models\KeyValue.cs" />

@@ -44,11 +44,13 @@ namespace NTW.Presentation
             if (ContextProperty.GetMetadata(typeof(ListGenericItemsControl<T>)) as UIPropertyMetadata == null)
                 ContextProperty.OverrideMetadata(typeof(ListGenericItemsControl<T>), new UIPropertyMetadata((o, e) => {
                     List<Item<T>> temp = new List<Item<T>>();
-                    for (int i = 0; i < (e.NewValue as IList<T>).Count; i++) {
-                        Item<T> item = new Item<T>(i, (T)(e.NewValue as IList<T>)[i]);
-                        item.PropertyChanged += new PropertyChangedEventHandler(itemChanged);
-                        temp.Add(item);
-                    }
+                    if (e.NewValue != null)
+                        for (int i = 0; i < (e.NewValue as IList<T>).Count; i++)
+                        {
+                            Item<T> item = new Item<T>(i, (T)(e.NewValue as IList<T>)[i]);
+                            item.PropertyChanged += new PropertyChangedEventHandler(itemChanged);
+                            temp.Add(item);
+                        }
 
                     o.SetValue(ListItemsControl<T>.ItemsSourceProperty, temp);
                 }));

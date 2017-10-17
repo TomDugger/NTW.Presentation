@@ -30,7 +30,6 @@ namespace ModelTest
             p = new Test.Presentation();
 
             this.DataContext = p;
-
             //System.Windows.Controls.Primitives.Popup p = new System.Windows.Controls.Primitives.Popup();
             //p.Placement = System.Windows.Controls.Primitives.PlacementMode.Center
         }

@@ -8,6 +8,7 @@ using NTW.Presentation.Attributes;
 using System.Windows.Controls;
 using System.Windows.Data;
 using System.Windows.Controls.Primitives;
+using System.Collections;
 
 namespace NTW.Presentation.Construction
 {
@@ -26,6 +27,32 @@ namespace NTW.Presentation.Construction
             typeof(bool)
         };
 
+        private static List<Type> GetTypes(Type type)
+        {
+            List<Type> result = new List<Type>();
+            NonPresentation nonPresenatry = System.Attribute.GetCustomAttributes(type).ToList().Find((x) => x is NonPresentation) as NonPresentation;
+
+            if (nonPresenatry == null)
+            {
+                result.Add(type);
+                foreach (var property in type.GetProperties())
+                    if (!SimpleTypes.Contains(property.PropertyType) && property.PropertyType != typeof(object))
+                    {
+                        if (property.PropertyType.IsArray || property.PropertyType.GetInterface(typeof(IList).Name) != null)
+                            result.AddRange(GetTypes(property.PropertyType.GetElementType()));
+                        else if (property.PropertyType.IsGenericType)
+                        {
+                            foreach(var t in property.PropertyType.GetGenericArguments())
+                                if (!SimpleTypes.Contains(t) && t != typeof(object))
+                                result.AddRange(GetTypes(t));
+                        }
+
+                            result.AddRange(GetTypes(property.PropertyType));
+                    }
+            }
+            return result;
+        }
+
         /// <summary>
         /// Получение массива типов для последующего формирования шаблонов отображения из указанного пространства имен.
         /// </summary>
@@ -37,16 +64,52 @@ namespace NTW.Presentation.Construction
             List<Type> result = new List<Type>();
 
             if (condition != null)
-                result = Assembly.GetEntryAssembly().GetTypes().Where(condition).Where(t => !t.IsGenericType).ToList();
+            {
+                List<Type> temp = new List<Type>();
+                temp = Assembly.GetEntryAssembly().GetTypes().Where(condition).Where(t => !t.IsGenericType).ToList();
+
+                //выделяем типы для которых требуется выделить шаблон
+                //result.AddRange(temp);
+                foreach (Type i in temp)
+                {
+                    NonPresentation nonPresenatry = System.Attribute.GetCustomAttributes(i).ToList().Find((x) => x is NonPresentation) as NonPresentation;
+                    if (nonPresenatry == null)
+                    {
+                        result.AddRange(GetTypes(i));
+                    }
+                }
+            }
 
             return result.ToArray();
         }
 
-        private static DataTemplate CreateTemplate(Type type)
+        private static FrameworkElementFactory CreateTemplateFromType(Type type)
         {
-            DataTemplate template = new DataTemplate();
-            template.DataType = type;
+            FrameworkElementFactory Container = new FrameworkElementFactory(typeof(Grid));
+            if (type.IsClass)
+            {
+                if (type.IsArray)
+                    return CreateArrayType(type);
+                else if (type.GetInterface(typeof(IList).Name) != null)
+                    return CreateListType(type);
+                else if (type.GetInterface(typeof(IDictionary).Name) != null)
+                    return CreateDictionaryType(type);
+                else if (type.IsGenericType)
+                {
+                    if (type.GetInterface(typeof(IList<>).Name) != null)
+                        return CreateListGenericType(type);
+                    else
+                        return CreateTemplateClass(type);
+                }
+                else
+                    return CreateTemplateClass(type);
+            }
 
+            return Container;
+        }
+
+        private static FrameworkElementFactory CreateTemplateClass(Type type)
+        {
             #region Атребуты (над классом)
             NonPresentation nonPresenatry = System.Attribute.GetCustomAttributes(type).ToList().Find((x) => x is NonPresentation) as NonPresentation;
             PresentationMarginInfo marginPresentary = System.Attribute.GetCustomAttributes(type).ToList().Find((x) => x is PresentationMarginInfo) as PresentationMarginInfo;
@@ -88,23 +151,8 @@ namespace NTW.Presentation.Construction
 
                         else if (property.PropertyType.BaseType == typeof(Enum))
                             ContainerPanel.AppendChild(CreateEnumType(property));
-
-                        else if (property.PropertyType.IsClass) {
-
-                            var interfaces = property.PropertyType.GetInterfaces();
-
-                            if (property.PropertyType.IsArray)
-                                ContainerPanel.AppendChild(CreateArrayType(property));
-                            else if (property.PropertyType.GetInterface("IList") != null)
-                                ContainerPanel.AppendChild(CreateListType(property));
-                            else if(property.PropertyType.GetInterface("IDictionary") != null)
-                                ContainerPanel.AppendChild(CreateDictionaryType(property));
-                            else if (property.PropertyType.IsGenericType)
-                                if (property.PropertyType.GetInterface((typeof(IList<>).Name)) != null)
-                                    ContainerPanel.AppendChild(CreateListGenericType(property));
-                                else
-                                    ContainerPanel.AppendChild(CreateClassType(property));
-                        }
+                        else
+                            ContainerPanel.AppendChild(CreateClassType(property.Name));
                         #endregion
 
                         Panel.AppendChild(ContainerPanel);
@@ -112,9 +160,7 @@ namespace NTW.Presentation.Construction
                 }
             #endregion
 
-            template.VisualTree = Panel;
-
-            return template;
+            return Panel;
         }
 
         private static FrameworkElementFactory CreateCaption(string propertyName, PresentationInfo pAttr)
@@ -126,15 +172,6 @@ namespace NTW.Presentation.Construction
         }
 
         #region обработки типов по признаку
-        //private static FrameworkElementFactory CreateCommandType(PropertyInfo property)
-        //{
-        //    FrameworkElementFactory Property = new FrameworkElementFactory(typeof(Button));
-        //    //вызов одинарной команды
-        //    Property.SetBinding(Button.CommandProperty, new Binding(property.Name));
-        //    Property.SetValue(Button.ContentProperty, "Run");
-        //    return Property;
-        //}
-
         private static FrameworkElementFactory CreateSimpleType(PropertyInfo property)
         {
             FrameworkElementFactory Property;
@@ -194,23 +231,23 @@ namespace NTW.Presentation.Construction
             return Property;
         }
 
-        private static FrameworkElementFactory CreateClassType(PropertyInfo property) {
-            FrameworkElementFactory Property = new FrameworkElementFactory(typeof(Label));
-            AddTemplateToResource(property.PropertyType);
-            Property.SetBinding(Label.DataContextProperty, new Binding(property.Name));
-            Property.SetBinding(Label.ContentProperty, new Binding("."));
-            Property.SetValue(Label.HorizontalContentAlignmentProperty, System.Windows.HorizontalAlignment.Stretch);
+        private static FrameworkElementFactory CreateClassType(string PropertyName) {
+            FrameworkElementFactory Property = new FrameworkElementFactory(typeof(ContentControl));
+            Property.SetValue(ContentControl.PaddingProperty, new Thickness(20, 0, 0, 0));
+            Property.SetBinding(ContentControl.ContentProperty, new Binding(PropertyName));
+            Property.SetValue(ContentControl.HorizontalContentAlignmentProperty, System.Windows.HorizontalAlignment.Stretch);
             return Property;
         }
 
-        private static FrameworkElementFactory CreateArrayType(PropertyInfo property) {
-            Type AType = property.PropertyType.GetElementType();
+        private static FrameworkElementFactory CreateArrayType(Type property) {
+            Type AType = property.GetElementType();
             if (SimpleTypes.Contains(AType) || AType.BaseType == typeof(Enum)) {
                 Type BType = typeof(ArrayItemsControl<>).MakeGenericType(AType);
                 FrameworkElementFactory Property = new FrameworkElementFactory(BType);
                 Property.SetValue(ScrollViewer.HorizontalScrollBarVisibilityProperty, ScrollBarVisibility.Disabled);
+                Property.SetValue(ItemsControl.PaddingProperty, new Thickness(20, 0, 0, 0));
                 Property.SetValue(ItemsControl.HorizontalContentAlignmentProperty, HorizontalAlignment.Stretch);
-                Property.SetBinding(BaseItemsControl.ContextProperty, new Binding(property.Name));
+                Property.SetBinding(BaseItemsControl.ContextProperty, new Binding("."));
 
                 if (AType.BaseType == typeof(Enum)) {
                     AddTemplateEnumToResource(AType);
@@ -226,26 +263,27 @@ namespace NTW.Presentation.Construction
             else {
                 FrameworkElementFactory Property = new FrameworkElementFactory(typeof(ItemsControl));
                 Property.SetValue(ScrollViewer.HorizontalScrollBarVisibilityProperty, ScrollBarVisibility.Disabled);
+                Property.SetValue(ItemsControl.PaddingProperty, new Thickness(20, 0, 0, 0));
                 Property.SetValue(ItemsControl.HorizontalContentAlignmentProperty, HorizontalAlignment.Stretch);
-                AddTemplateToResource(AType);
-                Property.SetBinding(ItemsControl.ItemsSourceProperty, new Binding(property.Name));
+                Property.SetBinding(ItemsControl.ItemsSourceProperty, new Binding("."));
                 Property.SetResourceReference(ItemsControl.ItemTemplateProperty, new DataTemplateKey(AType));
                 return Property;
             }
         }
 
-        private static FrameworkElementFactory CreateListType(PropertyInfo property) {
-            Type AType = property.PropertyType.GetGenericArguments()[0];
+        private static FrameworkElementFactory CreateListType(Type property) {
+            Type AType = property.GetGenericArguments()[0];
             Type BType = typeof(ListItemsControl<>).MakeGenericType(AType);
             FrameworkElementFactory Property = new FrameworkElementFactory(BType);
 
             Property.SetValue(ScrollViewer.HorizontalScrollBarVisibilityProperty, ScrollBarVisibility.Disabled);
             Property.SetValue(ItemsControl.HorizontalContentAlignmentProperty, HorizontalAlignment.Stretch);
+            Property.SetValue(ItemsControl.PaddingProperty, new Thickness(20, 0, 0, 0));
 
             if (SimpleTypes.Contains(AType) || AType.BaseType == typeof(Enum))
-                Property.SetBinding(BaseItemsControl.ContextProperty, new Binding(property.Name));
+                Property.SetBinding(BaseItemsControl.ContextProperty, new Binding("."));
             else
-                Property.SetBinding(BaseItemsControl.ItemsSourceProperty, new Binding(property.Name));
+                Property.SetBinding(BaseItemsControl.ItemsSourceProperty, new Binding("."));
             if (AType.BaseType == typeof(Enum)) {
                 AddTemplateEnumToResource(AType, true);
                 Property.SetResourceReference(ItemsControl.ItemTemplateProperty, "T_" + AType.FullName);
@@ -255,24 +293,24 @@ namespace NTW.Presentation.Construction
             else if (SimpleTypes.Contains(AType))
                 Property.SetResourceReference(ItemsControl.ItemTemplateProperty, "ItemSimpleD");
             else {
-                AddTemplateToResource(AType);
                 Property.SetResourceReference(ItemsControl.ItemTemplateProperty, "ItemClassD");
             }
             return Property;
         }
 
-        private static FrameworkElementFactory CreateListGenericType(PropertyInfo property) {
-            Type AType = property.PropertyType.GetGenericArguments()[0];
+        private static FrameworkElementFactory CreateListGenericType(Type property) {
+            Type AType = property.GetGenericArguments()[0];
             Type BType = typeof(ListGenericItemsControl<>).MakeGenericType(AType);
             FrameworkElementFactory Property = new FrameworkElementFactory(BType);
 
             Property.SetValue(ScrollViewer.HorizontalScrollBarVisibilityProperty, ScrollBarVisibility.Disabled);
             Property.SetValue(ItemsControl.HorizontalContentAlignmentProperty, HorizontalAlignment.Stretch);
+            Property.SetValue(ItemsControl.PaddingProperty, new Thickness(20, 0, 0, 0));
 
             if (SimpleTypes.Contains(AType) || AType.BaseType == typeof(Enum))
-                Property.SetBinding(BaseItemsControl.ContextProperty, new Binding(property.Name));
+                Property.SetBinding(BaseItemsControl.ContextProperty, new Binding("."));
             else
-                Property.SetBinding(BaseItemsControl.ItemsSourceProperty, new Binding(property.Name));
+                Property.SetBinding(BaseItemsControl.ItemsSourceProperty, new Binding("."));
             if (AType.BaseType == typeof(Enum)) {
                 AddTemplateEnumToResource(AType, true);
                 Property.SetResourceReference(ItemsControl.ItemTemplateProperty, "T_" + AType.FullName);
@@ -282,288 +320,25 @@ namespace NTW.Presentation.Construction
             else if (SimpleTypes.Contains(AType))
                 Property.SetResourceReference(ItemsControl.ItemTemplateProperty, "ItemSimpleD");
             else {
-                AddTemplateToResource(AType);
                 Property.SetResourceReference(ItemsControl.ItemTemplateProperty, "ItemClassD");
             }
             return Property;
         }
 
-        private static FrameworkElementFactory CreateDictionaryType(PropertyInfo property) { 
-            Type KType = property.PropertyType.GetGenericArguments()[0];
-            Type VType = property.PropertyType.GetGenericArguments()[1];
+        private static FrameworkElementFactory CreateDictionaryType(Type property) { 
+            Type KType = property.GetGenericArguments()[0];
+            Type VType = property.GetGenericArguments()[1];
             Type MType = typeof(DictionaryItemsControl<,>).MakeGenericType(KType, VType);
             FrameworkElementFactory Property = new FrameworkElementFactory(MType);
 
             Property.SetValue(ScrollViewer.HorizontalScrollBarVisibilityProperty, ScrollBarVisibility.Disabled);
             Property.SetValue(ItemsControl.HorizontalContentAlignmentProperty, HorizontalAlignment.Stretch);
 
-            Property.SetBinding(BaseItemsControl.ContextProperty, new Binding(property.Name));
+            Property.SetBinding(BaseItemsControl.ContextProperty, new Binding("."));
 
             Property.SetValue(ItemsControl.ItemTemplateProperty, GenerateItemDictionaryTemplate(VType));
             return Property;
         }
-
-        //private static FrameworkElementFactory CreateGenericListType(PropertyInfo property, PresentationCollectionInfo pcAttr)
-        //{
-        //    ListTypeToCreate.Add(property.PropertyType.GetGenericArguments()[0]);
-
-        //    FrameworkElementFactory BaseContainer = new FrameworkElementFactory(typeof(Grid));
-        //    FrameworkElementFactory Container = new FrameworkElementFactory(typeof(Grid));
-
-        //    #region Формирование модели если требуется
-        //    //попробуем без спецефичного формирования объекта
-        //    //увы, без него никак
-        //    Type GType = property.PropertyType.GetGenericArguments()[0];
-        //    string propertyName = property.Name;
-        //    Container.AddHandler(ListBox.LoadedEvent, new RoutedEventHandler((s, e) =>
-        //    {
-        //        var view = Activator.CreateInstance(typeof(CollectionViewModel<>).MakeGenericType(GType), null);
-        //        BindingOperations.SetBinding(view as DependencyObject, AbstractView.ItemsProperty, new Binding(propertyName) { Source = ((s as Grid).Parent as Grid).DataContext, UpdateSourceTrigger = UpdateSourceTrigger.PropertyChanged });
-        //        (s as Grid).DataContext = view;
-        //    }));
-        //    #endregion
-
-        //    //что делать если несколько типов генерации как в Dictionary?
-        //    #region Формирование Grid
-        //    FrameworkElementFactory ContainerRowProperty = new FrameworkElementFactory(typeof(RowDefinition));
-        //    ContainerRowProperty.SetValue(RowDefinition.HeightProperty, new GridLength(40));
-        //    Container.AppendChild(ContainerRowProperty);
-
-        //    FrameworkElementFactory ContainerRow1Property = new FrameworkElementFactory(typeof(RowDefinition));
-        //    ContainerRow1Property.SetValue(RowDefinition.HeightProperty, new GridLength(1, GridUnitType.Star));
-        //    Container.AppendChild(ContainerRow1Property);
-
-        //    FrameworkElementFactory ContainerColumnProperty = new FrameworkElementFactory(typeof(ColumnDefinition));
-        //    ContainerColumnProperty.SetValue(ColumnDefinition.WidthProperty, new GridLength(1, GridUnitType.Star));
-        //    Container.AppendChild(ContainerColumnProperty);
-
-        //    FrameworkElementFactory ContainerColumn1Property = new FrameworkElementFactory(typeof(ColumnDefinition));
-        //    ContainerColumn1Property.SetValue(ColumnDefinition.WidthProperty, new GridLength(40));
-        //    Container.AppendChild(ContainerColumn1Property);
-        //    #endregion
-
-        //    #region Button "Add"
-        //    FrameworkElementFactory ButtonAdd = new FrameworkElementFactory(typeof(Button));
-        //    ButtonAdd.SetValue(Button.ContentProperty, "+");
-        //    ButtonAdd.SetBinding(Button.CommandProperty, new Binding("AddCommand"));
-
-        //    if (pcAttr != null && pcAttr.AddButtonContentTemplate != null && Application.Current.TryFindResource(pcAttr.AddButtonContentTemplate) != null)
-        //        ButtonAdd.SetResourceReference(Button.ContentTemplateProperty, pcAttr.AddButtonContentTemplate);
-
-        //    Container.AppendChild(ButtonAdd);
-        //    #endregion
-
-        //    #region Button "Clear"
-        //    FrameworkElementFactory ButtonClear = new FrameworkElementFactory(typeof(Button));
-        //    ButtonClear.Name = property.Name + "clearButton";
-        //    ButtonClear.SetValue(Button.ContentProperty, "clear");
-        //    ButtonClear.SetBinding(Button.CommandProperty, new Binding("ClearCommand"));
-        //    ButtonClear.SetBinding(Button.CommandParameterProperty, new Binding(".") { ElementName = property.Name + "clearButton" });
-        //    ButtonClear.SetValue(Grid.ColumnProperty, 1);
-
-        //    if (pcAttr != null && pcAttr.ClearButtonContentTemplate != null && Application.Current.TryFindResource(pcAttr.ClearButtonContentTemplate) != null)
-        //        ButtonClear.SetResourceReference(Button.ContentTemplateProperty, pcAttr.ClearButtonContentTemplate);
-
-        //    Container.AppendChild(ButtonClear);
-        //    #endregion
-
-        //    #region List
-        //    FrameworkElementFactory List = new FrameworkElementFactory(typeof(ListBox));
-        //    List.SetValue(ScrollViewer.HorizontalScrollBarVisibilityProperty, ScrollBarVisibility.Disabled);
-        //    List.SetValue(Grid.ColumnSpanProperty, 2);
-        //    List.SetValue(Grid.RowProperty, 1);
-        //    List.SetValue(ListBox.HorizontalContentAlignmentProperty, System.Windows.HorizontalAlignment.Stretch);
-        //    List.SetBinding(ListBox.ItemsSourceProperty, new Binding("AItems"));
-
-        //    //как быть с шаблон данных
-        //    if (SimpleTypes.Contains(property.PropertyType.GetGenericArguments()[0]))
-        //        List.SetResourceReference(ListBox.ItemTemplateProperty, "ItemPresentation");
-        //    else
-        //    {
-        //        List.SetResourceReference(ListBox.ItemTemplateProperty, "CustomItemPresentation");
-        //        //List.SetBinding(ListBox.ItemsSourceProperty, new Binding("Items"));
-        //    }
-        //    Container.AppendChild(List);
-        //    #endregion
-
-        //    #region обработка аттрибута коллекции
-        //    if (pcAttr != null)
-        //    {
-        //        if (pcAttr.MinHeight != 0)
-        //            BaseContainer.SetValue(Grid.MinHeightProperty, pcAttr.MinHeight);
-
-        //        if (pcAttr.MaxHeight != 0)
-        //            BaseContainer.SetValue(Grid.MaxHeightProperty, pcAttr.MaxHeight);
-
-        //        if (pcAttr.ItemTemplate != null && Application.Current.TryFindResource(pcAttr.ItemTemplate) != null)
-        //            List.SetResourceReference(ListBox.ItemTemplateProperty, pcAttr.ItemTemplate);
-
-        //        if (pcAttr != null && pcAttr.ItemStyle != null && Application.Current.TryFindResource(pcAttr.ItemStyle) != null)
-        //            List.SetResourceReference(ListBox.ItemContainerStyleProperty, pcAttr.ItemStyle);
-        //    }
-        //    #endregion
-
-        //    BaseContainer.AppendChild(Container);
-
-        //    return BaseContainer;
-        //}
-
-        //private static FrameworkElementFactory CreateGenericDictionaryType(PropertyInfo property)
-        //{
-        //    FrameworkElementFactory Container = new FrameworkElementFactory(typeof(Grid));
-
-        //    #region Подгрузка
-        //    Type[] generics = property.PropertyType.GetGenericArguments();
-        //    string PropertyName = property.Name;
-
-        //    Container.AddHandler(Grid.LoadedEvent, new RoutedEventHandler((s, e) =>
-        //    {
-        //        var view = Activator.CreateInstance(typeof(DictionaryViewModel<,>).MakeGenericType(generics), null);
-        //        BindingOperations.SetBinding(view as DependencyObject, AbstractDictionaryView.ItemsProperty, new Binding(PropertyName) { Source = (s as Grid).DataContext, UpdateSourceTrigger = UpdateSourceTrigger.PropertyChanged });
-        //        (s as Grid).DataContext = view;
-        //    }));
-        //    #endregion
-
-        //    #region Строки и колонки
-        //    FrameworkElementFactory Row1 = new FrameworkElementFactory(typeof(RowDefinition));
-        //    Row1.SetValue(RowDefinition.HeightProperty, new GridLength(22));
-        //    Container.AppendChild(Row1);
-
-        //    FrameworkElementFactory Row2 = new FrameworkElementFactory(typeof(RowDefinition));
-        //    Row2.SetValue(RowDefinition.HeightProperty, new GridLength(1, GridUnitType.Star));
-        //    Container.AppendChild(Row2);
-
-        //    FrameworkElementFactory Row3 = new FrameworkElementFactory(typeof(RowDefinition));
-        //    Row3.SetValue(RowDefinition.HeightProperty, new GridLength(22));
-        //    Container.AppendChild(Row3);
-
-        //    FrameworkElementFactory Column1 = new FrameworkElementFactory(typeof(ColumnDefinition));
-        //    Column1.SetValue(ColumnDefinition.WidthProperty, new GridLength(1, GridUnitType.Star));
-        //    Container.AppendChild(Column1);
-
-        //    FrameworkElementFactory Column2 = new FrameworkElementFactory(typeof(ColumnDefinition));
-        //    Column2.SetValue(ColumnDefinition.WidthProperty, new GridLength(1, GridUnitType.Star));
-        //    Container.AppendChild(Column2);
-        //    #endregion
-
-        //    //1. ComboBox с возможностью выбора определенного ключа с дальнейшим отображением значения по ключу
-        //    #region Отборка
-        //    FrameworkElementFactory Combo = new FrameworkElementFactory(typeof(ComboBox));
-        //    Combo.SetValue(Grid.ColumnSpanProperty, 2);
-        //    Combo.SetBinding(ComboBox.ItemsSourceProperty, new Binding("MKeys"));
-        //    Combo.SetBinding(ComboBox.SelectedItemProperty, new Binding("SelectedKey") { Mode = BindingMode.TwoWay, UpdateSourceTrigger = UpdateSourceTrigger.PropertyChanged });
-        //    Container.AppendChild(Combo);
-        //    #endregion
-
-        //    //2. Label с шаблоном для отображения значения
-        //    #region Отображение
-        //    FrameworkElementFactory Lab = new FrameworkElementFactory(typeof(Label));
-        //    Lab.SetValue(Grid.RowProperty, 1);
-        //    Lab.SetValue(Grid.ColumnSpanProperty, 2);
-        //    Lab.SetValue(Label.HorizontalContentAlignmentProperty, System.Windows.HorizontalAlignment.Stretch);
-        //    //если это словарь то оно обладает двумя типами под generic и второй из них это значение
-        //    if (SimpleTypes.Contains(property.PropertyType.GetGenericArguments()[1]))
-        //    {
-        //        Lab.SetBinding(Label.ContentProperty, new Binding(".") { UpdateSourceTrigger = UpdateSourceTrigger.PropertyChanged });
-        //        Lab.SetResourceReference(Label.ContentTemplateProperty, "SItemPresentation");
-        //    }
-        //    else
-        //    {
-        //        Lab.SetBinding(Label.ContentProperty, new Binding("Value") { UpdateSourceTrigger = UpdateSourceTrigger.PropertyChanged });
-        //    }
-
-        //    Container.AppendChild(Lab);
-        //    #endregion
-
-        //    //3. Button  с возможностью добавления
-        //    #region Add
-        //    FrameworkElementFactory Add = new FrameworkElementFactory(typeof(Button));
-        //    Add.SetValue(Grid.RowProperty, 2);
-        //    Add.SetValue(Button.ContentProperty, "Add");
-        //    Add.SetBinding(Button.CommandProperty, new Binding("AddCommand"));
-        //    Container.AppendChild(Add);
-        //    #endregion
-
-        //    #region Remove
-        //    FrameworkElementFactory Remove = new FrameworkElementFactory(typeof(Button));
-        //    Remove.SetValue(Grid.RowProperty, 2);
-        //    Remove.SetValue(Grid.ColumnProperty, 1);
-        //    Remove.SetValue(Button.ContentProperty, "Remove");
-        //    Remove.SetBinding(Button.CommandProperty, new Binding("RemoveCommand"));
-        //    Container.AppendChild(Remove);
-        //    #endregion
-
-        //    return Container;
-        //}
-
-        //private static FrameworkElementFactory CreateGenericSimpleType(PropertyInfo property)
-        //{
-        //    //добавить в очередь на добавление
-        //    ListTypeToCreate.Add(property.PropertyType);
-        //    return CreateClassType(property);
-        //}
-
-        //private static FrameworkElementFactory CreateClassType(PropertyInfo property)
-        //{
-        //    FrameworkElementFactory Property = new FrameworkElementFactory(typeof(Label));
-        //    Property.SetBinding(Label.DataContextProperty, new Binding(property.Name));
-        //    Property.SetBinding(Label.ContentProperty, new Binding("."));
-        //    Property.SetValue(Label.HorizontalContentAlignmentProperty, System.Windows.HorizontalAlignment.Stretch);
-        //    return Property;
-        //}
-
-        //private static FrameworkElementFactory CreateArrayType(PropertyInfo property, PresentationCollectionInfo pcAttr)
-        //{
-        //    ListTypeToCreate.Add(property.PropertyType.GetElementType());
-
-        //    #region List
-        //    FrameworkElementFactory List = new FrameworkElementFactory(typeof(ListBox));
-
-        //    List.SetValue(ScrollViewer.HorizontalScrollBarVisibilityProperty, ScrollBarVisibility.Disabled);
-        //    List.SetValue(ListBox.HorizontalContentAlignmentProperty, System.Windows.HorizontalAlignment.Stretch);
-        //    List.SetBinding(ListBox.ItemsSourceProperty, new Binding("AItems"));
-
-        //    #region Формирование модели если требуется
-        //    //попробуем без спецефичного формирования объекта
-        //    //увы, без него никак
-        //    Type GType = property.PropertyType.GetElementType();
-        //    string propertyName = property.Name;
-        //    List.AddHandler(ListBox.LoadedEvent, new RoutedEventHandler((s, e) =>
-        //    {
-        //        var view = Activator.CreateInstance(typeof(CollectionViewModel<>).MakeGenericType(GType), null);
-        //        BindingOperations.SetBinding(view as DependencyObject, AbstractView.ItemsProperty, new Binding(propertyName) { Source = (s as ListBox).DataContext, UpdateSourceTrigger = UpdateSourceTrigger.PropertyChanged });
-        //        (s as ListBox).DataContext = view;
-        //    }));
-        //    #endregion
-
-        //    //как быть с шаблон данных
-        //    if (SimpleTypes.Contains(property.PropertyType.GetElementType()))
-        //        List.SetResourceReference(ListBox.ItemTemplateProperty, "SItemPresentation");
-        //    else
-        //    {
-        //        List.SetResourceReference(ListBox.ItemTemplateProperty, "SCustomItemPresentation");
-        //    }
-        //    #endregion
-
-        //    #region Выставление атрибутов
-        //    if (pcAttr != null)
-        //    {
-        //        if (pcAttr.MinHeight != 0)
-        //            List.SetValue(Grid.MinHeightProperty, pcAttr.MinHeight);
-
-        //        if (pcAttr.MaxHeight != 0)
-        //            List.SetValue(Grid.MaxHeightProperty, pcAttr.MaxHeight);
-
-        //        if (pcAttr.ItemTemplate != null && Application.Current.TryFindResource(pcAttr.ItemTemplate) != null)
-        //            List.SetResourceReference(ListBox.ItemTemplateProperty, pcAttr.ItemTemplate);
-
-        //        if (pcAttr != null && pcAttr.ItemStyle != null && Application.Current.TryFindResource(pcAttr.ItemStyle) != null)
-        //            List.SetResourceReference(ListBox.ItemContainerStyleProperty, pcAttr.ItemStyle);
-        //    }
-        //    #endregion
-
-        //    return List;
-        //}
         #endregion
 
         #region обертки
@@ -665,7 +440,7 @@ namespace NTW.Presentation.Construction
             DataTemplate template = new DataTemplate();
             FrameworkElementFactory Container = new FrameworkElementFactory(typeof(Expander));
 
-            Container.SetBinding(Expander.HeaderProperty, new Binding("Key"));
+            Container.SetBinding(Expander.HeaderProperty, new Binding("Key.Value"));
 
             FrameworkElementFactory Property = new FrameworkElementFactory(typeof(Label));
             Property.SetBinding(Label.ContentProperty, new Binding("."));
@@ -681,7 +456,6 @@ namespace NTW.Presentation.Construction
             else if (SimpleTypes.Contains(type))
                 Property.SetResourceReference(Label.ContentTemplateProperty, "ItemSimple");
             else {
-                AddTemplateToResource(type);
                 Property.SetBinding(Label.ContentProperty, new Binding("Value"));
                 Property.SetResourceReference(Label.ContentTemplateProperty, "ItemClass");
             }
@@ -731,7 +505,6 @@ namespace NTW.Presentation.Construction
             template.VisualTree = Container;
             return template;
         }
-
         #endregion
 
         #region Helps
@@ -787,11 +560,6 @@ namespace NTW.Presentation.Construction
         }
         #endregion
 
-        internal static void AddTemplateToResource(Type i) {
-            if (Application.Current.TryFindResource(new DataTemplateKey(i)) == null)
-                Application.Current.Resources.Add(new DataTemplateKey(i), CreateTemplate(i));
-        }
-
         internal static void AddTemplateEnumToResource(Type i, bool delete = false) {
             if (Application.Current.TryFindResource("T_" + i.FullName) == null)
                 Application.Current.Resources.Add("T_" + i.FullName, CreateEnumTemplate(i, delete));
@@ -810,7 +578,8 @@ namespace NTW.Presentation.Construction
             app.Resources.Add("ItemClassD", GenerateItemClassTemplateFromDelete());
 
             foreach (Type i in GetTypes(condition))
-                AddTemplateToResource(i);
+                if (Application.Current.TryFindResource(new DataTemplateKey(i)) == null)
+                    Application.Current.Resources.Add(new DataTemplateKey(i), new DataTemplate() { VisualTree = CreateTemplateFromType(i) });
         }
     }
 }

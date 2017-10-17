@@ -9,10 +9,11 @@ using System.Windows.Controls.Primitives;
 using System.Windows.Data;
 using System.Windows.Media;
 using NTW.Commands;
+using NTW.Presentation.Construction;
 
 namespace NTW.Presentation
 {
-    internal class DictionaryItemsControl<TKey, TValue> : BaseItemsControl
+    internal class DictionaryItemsControl<TKey, TValue> : BaseItemsControl, INotifyPropertyChanged
     {
         #region Private
         private Command addCommand;
@@ -22,7 +23,6 @@ namespace NTW.Presentation
         #endregion
 
         public DictionaryItemsControl() {
-
             NewValue = new DictionatyNewItem<TKey, TValue>();
 
             AddTemplateFromDictionatyNewValue();
@@ -47,6 +47,7 @@ namespace NTW.Presentation
             addButton.SetValue(Grid.RowProperty, 1);
             grid.AppendChild(addButton);
 
+            #region PopupPanel
             FrameworkElementFactory MenuAddElement = new FrameworkElementFactory(typeof(Popup));
             MenuAddElement.SetValue(Popup.PlacementProperty, System.Windows.Controls.Primitives.PlacementMode.Center);
             MenuAddElement.SetValue(Popup.StaysOpenProperty, false);
@@ -54,10 +55,10 @@ namespace NTW.Presentation
             MenuAddElement.SetValue(Popup.MinHeightProperty, 150.0);
             MenuAddElement.SetValue(Popup.MinWidthProperty, 100.0);
             MenuAddElement.SetBinding(Popup.WidthProperty, new Binding("ActualWidth") { RelativeSource = new RelativeSource(RelativeSourceMode.FindAncestor, typeof(Grid), 1) });
-            MenuAddElement.SetBinding(Popup.HeightProperty, new Binding("ActualHeight") { RelativeSource = new RelativeSource(RelativeSourceMode.FindAncestor, typeof(Grid), 1) });
 
             FrameworkElementFactory MenuGrid = new FrameworkElementFactory(typeof(Grid));
-            MenuGrid.SetValue(Grid.BackgroundProperty, new SolidColorBrush(Colors.White));
+            MenuGrid.SetValue(Grid.BackgroundProperty, new SolidColorBrush(Colors.White)); 
+            #endregion
 
             #region Rows
             FrameworkElementFactory MenuGridRowProperty = new FrameworkElementFactory(typeof(RowDefinition));
@@ -84,7 +85,7 @@ namespace NTW.Presentation
             Content.SetValue(Grid.ColumnSpanProperty, 2);
             Content.SetValue(Label.HorizontalContentAlignmentProperty, System.Windows.HorizontalAlignment.Stretch);
             Content.SetValue(Label.VerticalContentAlignmentProperty, System.Windows.VerticalAlignment.Stretch);
-            Content.SetBinding(Label.ContentProperty, new Binding() { Source = NewValue });
+            Content.SetBinding(Label.ContentProperty, new Binding(".") { Source = NewValue });
             MenuGrid.AppendChild(Content);
             #endregion
 
@@ -93,6 +94,8 @@ namespace NTW.Presentation
             AddButton.SetValue(Grid.RowProperty, 1);
             AddButton.SetValue(Grid.ColumnProperty, 0);
             AddButton.SetValue(Button.ContentProperty, "Add");
+            AddButton.SetBinding(Button.CommandProperty, new Binding() { Source = this.AddCommand });
+            AddButton.SetBinding(Button.CommandParameterProperty, new Binding(".") { Source = NewValue});
             MenuGrid.AppendChild(AddButton); 
             #endregion
 
@@ -129,21 +132,27 @@ namespace NTW.Presentation
         }
 
         private void itemChanged(object s, PropertyChangedEventArgs ea) {
-            Context[(s as KeyValue<TKey, TValue>).Key] = (s as KeyValue<TKey, TValue>).Value;
+            Context[(s as KeyValue<TKey, TValue>).Key.Value] = (s as KeyValue<TKey, TValue>).Value;
         }
 
         #region Public
         public IDictionary<TKey, TValue> Context {
             get { return (IDictionary<TKey, TValue>)GetValue(ContextProperty); }
             set { SetValue(ContextProperty, value); }
-        } 
+        }
         #endregion
 
         #region Commads
         public Command AddCommand {
             get {
                 return addCommand ?? (addCommand = new Command(obj => {
-                    
+                    DictionatyNewItem<TKey, TValue> value = (DictionatyNewItem<TKey, TValue>)obj;
+                    Context.Add(value.Key.Value, value.Value);
+                    (ItemsSource as List<KeyValue<TKey, TValue>>).Add(new KeyValue<TKey,TValue>(value.Key.Value, value.Value));
+                    CollectionViewSource.GetDefaultView(ItemsSource).Refresh();
+                    NewValue.IsOpen = false;
+                    NewValue.Default();
+                    NewValue.SelectedIndex = 0;
                 }, obj => ItemsSource != null && obj != null));
             }
         }
@@ -152,7 +161,7 @@ namespace NTW.Presentation
             get {
                 return removeCommand ?? (removeCommand = new Command(obj => {
                     if (Context != null) {
-                        Context.Remove(((KeyValue<TKey, TValue>)obj).Key);
+                        Context.Remove(((KeyValue<TKey, TValue>)obj).Key.Value);
                         (ItemsSource as List<KeyValue<TKey, TValue>>).Remove((KeyValue<TKey, TValue>)obj);
                     }
                     CollectionViewSource.GetDefaultView(ItemsSource).Refresh();
@@ -167,14 +176,37 @@ namespace NTW.Presentation
                 DataTemplate template = new DataTemplate(typeof(DictionatyNewItem<TKey, TValue>));
 
                 FrameworkElementFactory Container = new FrameworkElementFactory(typeof(TabControl));
+                Container.SetBinding(TabControl.SelectedIndexProperty, new Binding("SelectedIndex") { UpdateSourceTrigger = UpdateSourceTrigger.PropertyChanged});
 
                 FrameworkElementFactory KeyTab = new FrameworkElementFactory(typeof(TabItem));
                 KeyTab.SetValue(TabItem.HeaderProperty, "Key");
                 KeyTab.SetBinding(TabItem.ContentProperty, new Binding("Key"));
+                if (typeof(TKey) == typeof(bool))
+                    KeyTab.SetResourceReference(TabItem.ContentTemplateProperty, "ItemBoolen");
+                else if (TypeBuilder.SimpleTypes.Contains(typeof(TKey)))
+                    KeyTab.SetResourceReference(TabItem.ContentTemplateProperty, "ItemSimple");
+                else
+                {
+                    //TypeBuilder.AddTemplateToResource(typeof(TKey));
+                    KeyTab.SetBinding(Label.ContentProperty, new Binding("Key.Value"));
+                    KeyTab.SetResourceReference(TabItem.ContentTemplateProperty, "ItemClass");
+                }
+
                 Container.AppendChild(KeyTab);
 
                 FrameworkElementFactory ValueTab = new FrameworkElementFactory(typeof(TabItem));
                 ValueTab.SetValue(TabItem.HeaderProperty, "Value");
+                ValueTab.SetBinding(TabItem.ContentProperty, new Binding("Value"));
+                if (typeof(TValue) == typeof(bool))
+                    ValueTab.SetResourceReference(TabItem.ContentTemplateProperty, "ItemBoolen");
+                else if (TypeBuilder.SimpleTypes.Contains(typeof(TValue)))
+                    ValueTab.SetResourceReference(TabItem.ContentTemplateProperty, "ItemSimple");
+                else
+                {
+                    ValueTab.SetBinding(Label.ContentProperty, new Binding("Value"));
+                    ValueTab.SetResourceReference(TabItem.ContentTemplateProperty, "ItemClass");
+                }
+
                 Container.AppendChild(ValueTab);
 
                 template.VisualTree = Container;
@@ -182,6 +214,17 @@ namespace NTW.Presentation
                 Application.Current.Resources.Add(new DataTemplateKey(typeof(DictionatyNewItem<TKey, TValue>)), template);
             }
         }
+        #endregion
+
+        #region INotifyPropertyChanged Members
+        public event PropertyChangedEventHandler PropertyChanged;
+
+        public void Change(string Property)
+        {
+            if (PropertyChanged != null)
+                PropertyChanged(this, new PropertyChangedEventArgs(Property));
+        }
+
         #endregion
     }
 }
