@@ -21,15 +21,15 @@ namespace ModelTest
     /// </summary>
     public partial class MainWindow : Window
     {
-        ModelTest.Test.Presentation p;
+        ModelTest.Test.PresentationItem p;
 
         public MainWindow()
         {
             InitializeComponent();
 
-            p = new Test.Presentation();
+            p = new Test.PresentationItem();
 
-            this.DataContext = p;
+            this.DataContext = new Test.PresentationItem();
             //System.Windows.Controls.Primitives.Popup p = new System.Windows.Controls.Primitives.Popup();
             //p.Placement = System.Windows.Controls.Primitives.PlacementMode.Center
         }

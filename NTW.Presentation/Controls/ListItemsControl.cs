@@ -35,8 +35,11 @@ namespace NTW.Presentation
             ContainerRow1Property.SetValue(RowDefinition.HeightProperty, new GridLength(40));
             grid.AppendChild(ContainerRow1Property);
 
+            FrameworkElementFactory ScrollViewItemsPresenter = new FrameworkElementFactory(typeof(ScrollViewer));
+            ScrollViewItemsPresenter.SetValue(ScrollViewer.HorizontalScrollBarVisibilityProperty, ScrollBarVisibility.Disabled);
             FrameworkElementFactory itemsPreseter = new FrameworkElementFactory(typeof(ItemsPresenter));
-            grid.AppendChild(itemsPreseter);
+            ScrollViewItemsPresenter.AppendChild(itemsPreseter);
+            grid.AppendChild(ScrollViewItemsPresenter);
 
             FrameworkElementFactory addButton = new FrameworkElementFactory(typeof(Button));
             addButton.SetValue(Button.ContentProperty, "Add");

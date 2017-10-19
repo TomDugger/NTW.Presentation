@@ -27,6 +27,5 @@ namespace NTW.Presentation.Attributes
         public string ItemStyle { get; set; }
 
         public string AddButtonContentTemplate { get; set; }
-        public string ClearButtonContentTemplate { get; set; }
     }
 }

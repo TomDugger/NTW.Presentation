@@ -18,6 +18,7 @@ namespace NTW.Presentation
         #region Private
         private Command addCommand;
         private Command removeCommand;
+        private Command openPanel;
 
         private DictionatyNewItem<TKey, TValue> NewValue;
         #endregion
@@ -38,13 +39,17 @@ namespace NTW.Presentation
             ContainerRow1Property.SetValue(RowDefinition.HeightProperty, new GridLength(40));
             grid.AppendChild(ContainerRow1Property);
 
+            FrameworkElementFactory ScrollViewItemsPresenter = new FrameworkElementFactory(typeof(ScrollViewer));
+            ScrollViewItemsPresenter.SetValue(ScrollViewer.HorizontalScrollBarVisibilityProperty, ScrollBarVisibility.Disabled);
             FrameworkElementFactory itemsPreseter = new FrameworkElementFactory(typeof(ItemsPresenter));
-            grid.AppendChild(itemsPreseter);
+            ScrollViewItemsPresenter.AppendChild(itemsPreseter);
+            grid.AppendChild(ScrollViewItemsPresenter);
 
             FrameworkElementFactory addButton = new FrameworkElementFactory(typeof(ToggleButton), "ButtonAdd");
             addButton.SetBinding(ToggleButton.IsCheckedProperty, new Binding("IsOpen") { Source = NewValue });
             addButton.SetValue(Button.ContentProperty, "Add...");
             addButton.SetValue(Grid.RowProperty, 1);
+            addButton.SetValue(ToggleButton.CommandProperty, new Binding(".") { Source = OpenPanel });
             grid.AppendChild(addButton);
 
             #region PopupPanel
@@ -151,7 +156,6 @@ namespace NTW.Presentation
                     (ItemsSource as List<KeyValue<TKey, TValue>>).Add(new KeyValue<TKey,TValue>(value.Key.Value, value.Value));
                     CollectionViewSource.GetDefaultView(ItemsSource).Refresh();
                     NewValue.IsOpen = false;
-                    NewValue.Default();
                     NewValue.SelectedIndex = 0;
                 }, obj => ItemsSource != null && obj != null));
             }
@@ -168,6 +172,14 @@ namespace NTW.Presentation
                 }, obj => obj != null));
             }
         }
+
+        public Command OpenPanel {
+            get {
+                return openPanel ?? (openPanel = new Command((x) => { 
+                    NewValue.Default((Context as Dictionary<TKey, TValue>).Keys.ToList()); 
+                }));
+            }
+        }
         #endregion
 
         #region Help
@@ -178,25 +190,33 @@ namespace NTW.Presentation
                 FrameworkElementFactory Container = new FrameworkElementFactory(typeof(TabControl));
                 Container.SetBinding(TabControl.SelectedIndexProperty, new Binding("SelectedIndex") { UpdateSourceTrigger = UpdateSourceTrigger.PropertyChanged});
 
+                #region Key
                 FrameworkElementFactory KeyTab = new FrameworkElementFactory(typeof(TabItem));
                 KeyTab.SetValue(TabItem.HeaderProperty, "Key");
-                KeyTab.SetBinding(TabItem.ContentProperty, new Binding("Key"));
+
+                Binding keybn = new Binding("Key");
+                keybn.ValidationRules.Add(new DataErrorValidationRule());
+                KeyTab.SetBinding(TabItem.ContentProperty, keybn);
+
                 if (typeof(TKey) == typeof(bool))
                     KeyTab.SetResourceReference(TabItem.ContentTemplateProperty, "ItemBoolen");
                 else if (TypeBuilder.SimpleTypes.Contains(typeof(TKey)))
                     KeyTab.SetResourceReference(TabItem.ContentTemplateProperty, "ItemSimple");
                 else
                 {
-                    //TypeBuilder.AddTemplateToResource(typeof(TKey));
-                    KeyTab.SetBinding(Label.ContentProperty, new Binding("Key.Value"));
+                    Binding bnn = new Binding("Key.Value") { UpdateSourceTrigger = UpdateSourceTrigger.PropertyChanged };
+                    bnn.ValidationRules.Add(new DataErrorValidationRule());
+                    KeyTab.SetBinding(Label.ContentProperty, bnn);
                     KeyTab.SetResourceReference(TabItem.ContentTemplateProperty, "ItemClass");
-                }
+                } 
+                #endregion
 
                 Container.AppendChild(KeyTab);
 
+                #region Value
                 FrameworkElementFactory ValueTab = new FrameworkElementFactory(typeof(TabItem));
                 ValueTab.SetValue(TabItem.HeaderProperty, "Value");
-                ValueTab.SetBinding(TabItem.ContentProperty, new Binding("Value"));
+                ValueTab.SetBinding(TabItem.ContentProperty, new Binding("."));
                 if (typeof(TValue) == typeof(bool))
                     ValueTab.SetResourceReference(TabItem.ContentTemplateProperty, "ItemBoolen");
                 else if (TypeBuilder.SimpleTypes.Contains(typeof(TValue)))
@@ -207,7 +227,8 @@ namespace NTW.Presentation
                     ValueTab.SetResourceReference(TabItem.ContentTemplateProperty, "ItemClass");
                 }
 
-                Container.AppendChild(ValueTab);
+                Container.AppendChild(ValueTab); 
+                #endregion
 
                 template.VisualTree = Container;
 

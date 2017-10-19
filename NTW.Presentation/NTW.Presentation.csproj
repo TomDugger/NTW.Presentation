@@ -44,11 +44,9 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Attributes\NonPresentation.cs" />
+    <Compile Include="Attributes\PresentationInfo.cs" />
     <Compile Include="Attributes\PresentationMarginInfo.cs" />
     <Compile Include="Attributes\PresentationCollectionInfo.cs" />
-    <Compile Include="Attributes\PresentationInfo.cs" />
-    <Compile Include="Attributes\PresentationInterfaceInfo.cs" />
-    <Compile Include="Attributes\PresentationPaddingInfo.cs" />
     <Compile Include="Construction\EnumBuilder.cs" />
     <Compile Include="Construction\TypeBuilder.cs" />
     <Compile Include="Controls\ArrayItemsControl.cs" />

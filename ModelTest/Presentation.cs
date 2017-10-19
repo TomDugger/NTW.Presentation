@@ -9,10 +9,12 @@ using System.Collections.ObjectModel;
 using System.Windows.Media;
 using System.Windows;
 using System.Windows.Input;
+using System.ComponentModel;
+using System.Windows.Data;
 
 namespace ModelTest.Test
 {
-    [PresentationMarginInfo(LeftRight = 50)]
+    [PresentationMarginInfo(LeftRight = 5)]
     public class Presentation
     {
         public Presentation()
@@ -66,26 +68,26 @@ namespace ModelTest.Test
             //    new PresentationGeneric<int>() { Value = 1 }
             //};
 
-            //ValueDictionaryStringString = new Dictionary<int, int>();
-            //ValueDictionaryStringString.Add(0, 10);
-            //ValueDictionaryStringString.Add(1, 152);
-            //ValueDictionaryStringString.Add(2, 854);
+            ValueDictionaryStringString = new Dictionary<int, int>();
+            ValueDictionaryStringString.Add(0, 10);
+            ValueDictionaryStringString.Add(1, 152);
+            ValueDictionaryStringString.Add(2, 854);
 
-            //ValueDictionaryDoublePresentationItem = new Dictionary<double, PresentationItem>();
-            //ValueDictionaryDoublePresentationItem.Add(10.1, new PresentationItem() { ItemName = "Item 1", ItemValue = 10.1 });
-            //ValueDictionaryDoublePresentationItem.Add(20.2, new PresentationItem() { ItemName = "Item 2", ItemValue = 20.2 });
+            ValueDictionaryDoublePresentationItem = new Dictionary<double, PresentationItem>();
+            ValueDictionaryDoublePresentationItem.Add(10.1, new PresentationItem() { ItemName = "Item 1", ItemValue = 10.1 });
+            ValueDictionaryDoublePresentationItem.Add(20.2, new PresentationItem() { ItemName = "Item 2", ItemValue = 20.2 });
 
-            //ValueDictionaryDoublePresentationItem2 = new Dictionary<double, PresentationItem>();
-            //ValueDictionaryDoublePresentationItem2.Add(10.1, new PresentationItem() { ItemName = "Item 11", ItemValue = 10.1 });
-            //ValueDictionaryDoublePresentationItem2.Add(20.2, new PresentationItem() { ItemName = "Item 12", ItemValue = 20.2 });
+            ValueDictionaryDoublePresentationItem2 = new Dictionary<double, PresentationItem>();
+            ValueDictionaryDoublePresentationItem2.Add(10.1, new PresentationItem() { ItemName = "Item 11", ItemValue = 10.1 });
+            ValueDictionaryDoublePresentationItem2.Add(20.2, new PresentationItem() { ItemName = "Item 12", ItemValue = 20.2 });
 
-            //ValueDictionaryPresentationItemPresentationListString = new Dictionary<PresentationItem, PresentationList<string>>();
-            //ValueDictionaryPresentationItemPresentationListString.Add(new PresentationItem() { ItemName = "Item 1", ItemValue = 10.1 }, new PresentationList<string>());
+            ValueDictionaryPresentationItemPresentationListString = new Dictionary<PresentationItem, PresentationList<string>>();
+            ValueDictionaryPresentationItemPresentationListString.Add(new PresentationItem() { ItemName = "Item 1", ItemValue = 10.1 }, new PresentationList<string>());
 
 
-            int i = 0;
-            foreach (var key in Application.Current.Resources.Keys)
-            {
+            //int i = 0;
+            //foreach (var key in Application.Current.Resources.Keys)
+            //{
                 //ValueArrayPresentationItem[i] = new PresentationItem() { ItemName = key.ToString(), ItemValue = i * 0.158 };
                 //ValueArrayPresentationGenericInt[i] = new PresentationGeneric<int>() { Value = i * 5 };
                 //ValueListInt.Add(i);
@@ -99,8 +101,8 @@ namespace ModelTest.Test
                 //ValueDictionaryDoublePresentationItem.Add(i, new PresentationItem() { ItemName = key.ToString(), ItemValue = i });
                 //ValueDictionaryDoublePresentationItem2.Add(i, new PresentationItem() { ItemName = key.ToString(), ItemValue = i });
                 //ValueDictionaryPresentationItemPresentationListString.Add(new PresentationItem() { ItemName = key.ToString(), ItemValue = i}, new PresentationList<string>() { });
-                i++;
-            }
+                //i++;
+            //}
         }
 
         #region Simple
@@ -144,6 +146,7 @@ namespace ModelTest.Test
         #endregion
 
         #region Array
+        //[PresentationInfo(CaptionName = "Массив целых чисел", MaxHeight = 100, MinHeight = 20, PresentCaption = TextWrapping.Wrap)]
         //public int[] ValueArrayInt { get; set; }
 
         //public uint[] ValueArrayUInt { get; set; }
@@ -180,6 +183,7 @@ namespace ModelTest.Test
         #endregion
 
         #region List
+        //[PresentationInfo(CaptionName="Список целых чисел", MaxHeight=100, MinHeight = 20, PresentCaption=TextWrapping.Wrap)]
         //public List<int> ValueListInt { get; set; }
 
         //public List<bool> ValueListBool { get; set; }
@@ -200,65 +204,22 @@ namespace ModelTest.Test
         #endregion
 
         #region Dictionary
-        //public Dictionary<int, int> ValueDictionaryStringString { get; set; }
+        [PresentationInfo(CaptionName = "словарь целых чисел", MaxHeight = 200, MinHeight = 20, PresentCaption = TextWrapping.Wrap)]
+        [PresentationMarginInfo()]
+        public Dictionary<int, int> ValueDictionaryStringString { get; set; }
 
-        //public Dictionary<double, PresentationItem> ValueDictionaryDoublePresentationItem { get; set; }
+        [PresentationMarginInfo()]
+        public Dictionary<double, PresentationItem> ValueDictionaryDoublePresentationItem { get; set; }
 
-        //public Dictionary<double, PresentationItem> ValueDictionaryDoublePresentationItem2 { get; set; }
+        [PresentationMarginInfo()]
+        public Dictionary<double, PresentationItem> ValueDictionaryDoublePresentationItem2 { get; set; }
 
-        //public Dictionary<PresentationItem, PresentationList<string>> ValueDictionaryPresentationItemPresentationListString { get; set; }
+        [PresentationMarginInfo()]
+        public Dictionary<PresentationItem, PresentationList<string>> ValueDictionaryPresentationItemPresentationListString { get; set; }
         #endregion
 
         #region Commands
-        //public Command Commanda { get; set; }
         #endregion
-
-        //[PresentationMarginInfo(Top = 50)]
-        //[PresentationInfo(CaptionName = "Просто перечисление", PresentCaption = TextWrapping.NoWrap)]
-        //[NonPresentation]
-        //public Aenum Enum { get; set; }
-
-        //public Command Commanda { get; set; }
-
-        //public Dictionary<int, PresentationItem> dictionary { get; set; }
-
-        //public Dictionary<string, PresentationItem> dictionary2 { get; set; }
-
-        //public PresentationItem[] ArrayPresentationItems { get; set; }
-
-        //public PresentationGeneric<int, int>[] ArrayGeneric { get; set; }
-
-        //[PresentationInfo(CaptionName = "Допэлемент", PresentCaption = TextWrapping.NoWrap)]
-        //public PresentationItem Item { get; set; }
-
-        //public PresentationGeneric<int, string> GItem { get; set; }
-
-        //public List<PresentationGeneric<double, long>> ListGItems { get; set; }
-
-        //public List<PresentationGeneric<int, int>> ListG2Items { get; set; }
-
-        //[PresentationInfo(CaptionName = "Массив генерации двойного типа", PresentCaption = TextWrapping.NoWrap)]
-        //public PresentationGeneric<string, double>[] ArrayGItems { get; set; }
-
-        //[PresentationCollectionInfo(MinHeight = 100, MaxHeight = 200, AddButtonContentTemplate = "AddTemplate", ClearButtonContentTemplate = "NewTemplate")]
-        //[PresentationInfo(CaptionName = "Список чисел (int)", PresentCaption = TextWrapping.NoWrap)]
-        //public List<int> List { get; set; }
-
-        //[PresentationInfo(CaptionName = "Представление ObservableCollection типа int", PresentCaption = TextWrapping.NoWrap)]
-        //public ObservableCollection<int> Collection { get; set; }
-
-        //[PresentationInfo(CaptionName = "Собственный список наследованный от IList", PresentCaption = TextWrapping.NoWrap)]
-        //public PresentationList<PresentationItem> PList { get; set; }
-
-        //[PresentationCollectionInfo(MinHeight = 100, MaxHeight = 300)]
-        //[PresentationInfo(CaptionName = "Список Собственных объектов", PresentCaption = TextWrapping.NoWrap)]
-        //public List<PresentationItem> Items { get; set; }
-
-        //[PresentationInfo(CaptionName = "Собственные объекты в виде массива", PresentCaption = TextWrapping.NoWrap)]
-        //public PresentationItem[] Items1 { get; set; }
-
-        //[PresentationInfo(CaptionName = "Простой массив целых чисел", PresentCaption = TextWrapping.Wrap)]
-        //public int[] Items2 { get; set; }
     }
 
     public class Command : ICommand
@@ -291,16 +252,9 @@ namespace ModelTest.Test
 
     public class PresentationItem
     {
-        [PresentationInfo(CaptionName = "Имя допэлемента")]
         public string ItemName { get; set; }
 
-        [PresentationInfo(CaptionName = "Значение допэлемента")]
         public double ItemValue { get; set; }
-
-        public override string ToString()
-        {
-            return "ItemName = " + ItemName + ", ItemValue = " + ItemValue;
-        }
     }
 
     public class PresentationGeneric<T>

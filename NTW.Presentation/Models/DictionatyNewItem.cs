@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.ComponentModel;
+using System.Windows.Controls;
 
 namespace NTW.Presentation
 {
@@ -15,8 +16,8 @@ namespace NTW.Presentation
         private int _SelectedIndex = 0;
         #endregion
 
-        public DictionatyNewItem() {
-            _Key = new DataKey<TKey>((TKey)CreateObject(typeof(TKey)));
+        public DictionatyNewItem(List<TKey> keys = null) {
+            _Key = new DataKey<TKey>((TKey)CreateObject(typeof(TKey)), keys);
             _Value = (TValue)CreateObject(typeof(TValue));
         }
 
@@ -38,9 +39,9 @@ namespace NTW.Presentation
         #endregion
 
         #region Void
-        public void Default()
+        public void Default(List<TKey> keys)
         {
-            Key = new DataKey<TKey>((TKey)CreateObject(typeof(TKey)));
+            Key = new DataKey<TKey>((TKey)CreateObject(typeof(TKey)), keys);
             Value = (TValue)CreateObject(typeof(TValue));
         }
         #endregion

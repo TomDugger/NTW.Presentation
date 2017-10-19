@@ -15,7 +15,7 @@ namespace NTW.Presentation.Attributes
         private double buttom = 0;
 
         private double leftRight = 0;
-        private double topButtom = 0;
+        private double topButtom = 6;
         private double all = 0;
         #endregion
 

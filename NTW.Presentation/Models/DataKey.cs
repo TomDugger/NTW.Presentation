@@ -6,14 +6,16 @@ using System.ComponentModel;
 
 namespace NTW.Presentation
 {
-    public class DataKey<TKey>: INotifyPropertyChanged
+    public class DataKey<TKey>: INotifyPropertyChanged, IDataErrorInfo
     {
         #region Private
         private TKey _firstvalue;
+        private List<TKey> Keys;
         #endregion
 
-        public DataKey(TKey key)
+        public DataKey(TKey key, List<TKey> keys)
         {
+            Keys = keys;
             _firstvalue = key;
         }
 
@@ -27,7 +29,7 @@ namespace NTW.Presentation
             set
             {
                 _firstvalue = value;
-                Change("Key");
+                Change("Value");
             }
         }
         #endregion
@@ -40,6 +42,34 @@ namespace NTW.Presentation
             if (PropertyChanged != null)
                 PropertyChanged(this, new PropertyChangedEventArgs(Property));
         }
+        #endregion
+
+        #region IDataErrorInfo Members
+
+        public string Error
+        {
+            get { throw new NotImplementedException(); }
+        }
+
+        public string this[string columnName]
+        {
+            get {
+                string error = String.Empty;
+                switch (columnName)
+                {
+                    case "Value":
+                        {
+                            TKey f = _firstvalue;
+                            if (Keys != null)
+                                if (Keys.Contains(f))
+                                    error = "ror";
+                            break;
+                        }
+                }
+                return error;
+            }
+        }
+
         #endregion
     }
 }

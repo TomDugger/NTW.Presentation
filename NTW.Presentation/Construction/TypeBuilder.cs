@@ -9,6 +9,7 @@ using System.Windows.Controls;
 using System.Windows.Data;
 using System.Windows.Controls.Primitives;
 using System.Collections;
+using System.Windows.Input;
 
 namespace NTW.Presentation.Construction
 {
@@ -38,13 +39,15 @@ namespace NTW.Presentation.Construction
                 foreach (var property in type.GetProperties())
                     if (!SimpleTypes.Contains(property.PropertyType) && property.PropertyType != typeof(object))
                     {
-                        if (property.PropertyType.IsArray || property.PropertyType.GetInterface(typeof(IList).Name) != null)
+                        if (property.PropertyType.IsArray)
                             result.AddRange(GetTypes(property.PropertyType.GetElementType()));
+                        else if (property.PropertyType.GetInterface(typeof(IList).Name) != null)
+                            result.AddRange(GetTypes(property.PropertyType.GetElementType() == null ? property.PropertyType.GetGenericArguments()[0] : property.PropertyType.GetElementType()));
                         else if (property.PropertyType.IsGenericType)
                         {
-                            foreach(var t in property.PropertyType.GetGenericArguments())
+                            foreach (var t in property.PropertyType.GetGenericArguments())
                                 if (!SimpleTypes.Contains(t) && t != typeof(object))
-                                result.AddRange(GetTypes(t));
+                                    result.AddRange(GetTypes(t));
                         }
 
                             result.AddRange(GetTypes(property.PropertyType));
@@ -113,7 +116,6 @@ namespace NTW.Presentation.Construction
             #region Атребуты (над классом)
             NonPresentation nonPresenatry = System.Attribute.GetCustomAttributes(type).ToList().Find((x) => x is NonPresentation) as NonPresentation;
             PresentationMarginInfo marginPresentary = System.Attribute.GetCustomAttributes(type).ToList().Find((x) => x is PresentationMarginInfo) as PresentationMarginInfo;
-            PresentationPaddingInfo paddingPresentary = System.Attribute.GetCustomAttributes(type).ToList().Find((x) => x is PresentationPaddingInfo) as PresentationPaddingInfo;
             #endregion
 
             #region Основа (контейнер) в которую будут вкладыватся элементы
@@ -121,7 +123,6 @@ namespace NTW.Presentation.Construction
             Panel.Name = "BackPanel";
 
             Panel.SetValue(StackPanel.MarginProperty, GetThickness(marginPresentary));
-            Panel.SetValue(Control.PaddingProperty, GetThickness(paddingPresentary));
             #endregion
 
             #region Свойства
@@ -148,11 +149,12 @@ namespace NTW.Presentation.Construction
                         #region конструирование шаблона для свойств
                         if (SimpleTypes.Contains(property.PropertyType))
                             ContainerPanel.AppendChild(CreateSimpleType(property));
-
                         else if (property.PropertyType.BaseType == typeof(Enum))
                             ContainerPanel.AppendChild(CreateEnumType(property));
+                        else if (property.PropertyType.GetInterface(typeof(ICommand).Name) != null)
+                            ContainerPanel.AppendChild(CreateCommandType(property));
                         else
-                            ContainerPanel.AppendChild(CreateClassType(property.Name));
+                            ContainerPanel.AppendChild(CreateClassType(property.Name, pAttr));
                         #endregion
 
                         Panel.AppendChild(ContainerPanel);
@@ -166,6 +168,7 @@ namespace NTW.Presentation.Construction
         private static FrameworkElementFactory CreateCaption(string propertyName, PresentationInfo pAttr)
         {
             FrameworkElementFactory Caption = new FrameworkElementFactory(typeof(TextBlock));
+            Caption.SetValue(TextBlock.FontWeightProperty, System.Windows.FontWeights.Bold);
             Caption.SetValue(TextBlock.TextProperty, pAttr != null ? pAttr.CaptionName : propertyName);
             Caption.SetValue(TextBlock.TextWrappingProperty, pAttr != null ? pAttr.PresentCaption : TextWrapping.NoWrap);
             return Caption;
@@ -231,21 +234,37 @@ namespace NTW.Presentation.Construction
             return Property;
         }
 
-        private static FrameworkElementFactory CreateClassType(string PropertyName) {
+        private static FrameworkElementFactory CreateClassType(string PropertyName, PresentationInfo pinfo = null) {
             FrameworkElementFactory Property = new FrameworkElementFactory(typeof(ContentControl));
+
+            if (pinfo != null)
+            {
+                if (pinfo.MinHeight > 0)
+                    Property.SetValue(ContentControl.MinHeightProperty, pinfo.MinHeight);
+                if (pinfo.MaxHeight > 0)
+                    Property.SetValue(ContentControl.MaxHeightProperty, pinfo.MaxHeight);
+
+                if (pinfo.MinWidth > 0)
+                    Property.SetValue(ContentControl.MinWidthProperty, pinfo.MinWidth);
+                if (pinfo.MaxWidth > 0)
+                    Property.SetValue(ContentControl.MaxWidthProperty, pinfo.MaxWidth);
+            }
+
             Property.SetValue(ContentControl.PaddingProperty, new Thickness(20, 0, 0, 0));
             Property.SetBinding(ContentControl.ContentProperty, new Binding(PropertyName));
             Property.SetValue(ContentControl.HorizontalContentAlignmentProperty, System.Windows.HorizontalAlignment.Stretch);
             return Property;
         }
 
-        private static FrameworkElementFactory CreateArrayType(Type property) {
+        private static FrameworkElementFactory CreateArrayType(Type property)
+        {
             Type AType = property.GetElementType();
             if (SimpleTypes.Contains(AType) || AType.BaseType == typeof(Enum)) {
                 Type BType = typeof(ArrayItemsControl<>).MakeGenericType(AType);
                 FrameworkElementFactory Property = new FrameworkElementFactory(BType);
                 Property.SetValue(ScrollViewer.HorizontalScrollBarVisibilityProperty, ScrollBarVisibility.Disabled);
                 Property.SetValue(ItemsControl.PaddingProperty, new Thickness(20, 0, 0, 0));
+
                 Property.SetValue(ItemsControl.HorizontalContentAlignmentProperty, HorizontalAlignment.Stretch);
                 Property.SetBinding(BaseItemsControl.ContextProperty, new Binding("."));
 
@@ -271,7 +290,8 @@ namespace NTW.Presentation.Construction
             }
         }
 
-        private static FrameworkElementFactory CreateListType(Type property) {
+        private static FrameworkElementFactory CreateListType(Type property)
+        {
             Type AType = property.GetGenericArguments()[0];
             Type BType = typeof(ListItemsControl<>).MakeGenericType(AType);
             FrameworkElementFactory Property = new FrameworkElementFactory(BType);
@@ -281,7 +301,7 @@ namespace NTW.Presentation.Construction
             Property.SetValue(ItemsControl.PaddingProperty, new Thickness(20, 0, 0, 0));
 
             if (SimpleTypes.Contains(AType) || AType.BaseType == typeof(Enum))
-                Property.SetBinding(BaseItemsControl.ContextProperty, new Binding("."));
+                Property.SetBinding(BaseItemsControl.ContextProperty, new Binding(".") { UpdateSourceTrigger = UpdateSourceTrigger.PropertyChanged});
             else
                 Property.SetBinding(BaseItemsControl.ItemsSourceProperty, new Binding("."));
             if (AType.BaseType == typeof(Enum)) {
@@ -298,7 +318,8 @@ namespace NTW.Presentation.Construction
             return Property;
         }
 
-        private static FrameworkElementFactory CreateListGenericType(Type property) {
+        private static FrameworkElementFactory CreateListGenericType(Type property)
+        {
             Type AType = property.GetGenericArguments()[0];
             Type BType = typeof(ListGenericItemsControl<>).MakeGenericType(AType);
             FrameworkElementFactory Property = new FrameworkElementFactory(BType);
@@ -308,7 +329,7 @@ namespace NTW.Presentation.Construction
             Property.SetValue(ItemsControl.PaddingProperty, new Thickness(20, 0, 0, 0));
 
             if (SimpleTypes.Contains(AType) || AType.BaseType == typeof(Enum))
-                Property.SetBinding(BaseItemsControl.ContextProperty, new Binding("."));
+                Property.SetBinding(BaseItemsControl.ContextProperty, new Binding(".") { UpdateSourceTrigger = UpdateSourceTrigger.PropertyChanged });
             else
                 Property.SetBinding(BaseItemsControl.ItemsSourceProperty, new Binding("."));
             if (AType.BaseType == typeof(Enum)) {
@@ -325,7 +346,8 @@ namespace NTW.Presentation.Construction
             return Property;
         }
 
-        private static FrameworkElementFactory CreateDictionaryType(Type property) { 
+        private static FrameworkElementFactory CreateDictionaryType(Type property)
+        { 
             Type KType = property.GetGenericArguments()[0];
             Type VType = property.GetGenericArguments()[1];
             Type MType = typeof(DictionaryItemsControl<,>).MakeGenericType(KType, VType);
@@ -337,6 +359,14 @@ namespace NTW.Presentation.Construction
             Property.SetBinding(BaseItemsControl.ContextProperty, new Binding("."));
 
             Property.SetValue(ItemsControl.ItemTemplateProperty, GenerateItemDictionaryTemplate(VType));
+            return Property;
+        }
+
+        private static FrameworkElementFactory CreateCommandType(PropertyInfo property)
+        {
+            FrameworkElementFactory Property = new FrameworkElementFactory(typeof(Button));
+            Property.SetValue(Button.ContentProperty, "Run");
+            Property.SetBinding(Button.CommandProperty, new Binding(property.Name) { });
             return Property;
         }
         #endregion
@@ -365,7 +395,9 @@ namespace NTW.Presentation.Construction
                 Container.AppendChild(DeleteButton);
             }
             FrameworkElementFactory Property = new FrameworkElementFactory(typeof(TextBox));
-            Property.SetBinding(TextBox.TextProperty, new Binding("Value") { Mode = BindingMode.TwoWay, UpdateSourceTrigger = UpdateSourceTrigger.PropertyChanged });
+            Binding bn = new Binding("Value") { Mode = BindingMode.TwoWay, UpdateSourceTrigger = UpdateSourceTrigger.PropertyChanged };
+            bn.ValidationRules.Add(new DataErrorValidationRule());
+            Property.SetBinding(TextBox.TextProperty, bn);
             Container.AppendChild(Property);
             template.VisualTree = Container;
             return template;
@@ -394,8 +426,12 @@ namespace NTW.Presentation.Construction
                 Container.AppendChild(DeleteButton);
             }
             FrameworkElementFactory Property = new FrameworkElementFactory(typeof(ToggleButton));
-            Property.SetBinding(ToggleButton.ContentProperty, new Binding("Value"));
-            Property.SetBinding(ToggleButton.IsCheckedProperty, new Binding("Value"));
+
+            Binding bn = new Binding("Value") { Mode = BindingMode.TwoWay, UpdateSourceTrigger = UpdateSourceTrigger.PropertyChanged };
+            bn.ValidationRules.Add(new DataErrorValidationRule());
+
+            Property.SetBinding(ToggleButton.ContentProperty, bn);
+            Property.SetBinding(ToggleButton.IsCheckedProperty, bn);
             Container.AppendChild(Property);
             template.VisualTree = Container;
             return template;
@@ -427,7 +463,9 @@ namespace NTW.Presentation.Construction
             Container.AppendChild(DeleteButton);
 
             FrameworkElementFactory Property = new FrameworkElementFactory(typeof(Label));
-            Property.SetBinding(Label.ContentProperty, new Binding("."));
+            Binding bn = new Binding(".") { Mode = BindingMode.TwoWay, UpdateSourceTrigger = UpdateSourceTrigger.PropertyChanged };
+            bn.ValidationRules.Add(new DataErrorValidationRule());
+            Property.SetBinding(Label.ContentProperty, bn);
             Property.SetValue(Label.HorizontalContentAlignmentProperty, HorizontalAlignment.Stretch);
             Property.SetValue(Label.PaddingProperty, new Thickness(0));
             Container.AppendChild(Property);
@@ -514,32 +552,6 @@ namespace NTW.Presentation.Construction
             if (pmAttr != null)
             {
                 double l = 0, t = 0, r = 0, b = 0;
-                if (pmAttr.All != 0)
-                    l = t = r = b = pmAttr.All;
-                else if (pmAttr.LeftRight != 0 || pmAttr.TopButtom != 0)
-                {
-                    if (pmAttr.LeftRight != 0)
-                        l = r = pmAttr.LeftRight;
-
-                    if (pmAttr.TopButtom != 0)
-                        t = b = pmAttr.TopButtom;
-                }
-                else
-                {
-                    l = pmAttr.Left; t = pmAttr.Top; r = pmAttr.Right; b = pmAttr.Buttom;
-                }
-                th = new Thickness(l, t, r, b);
-            }
-            return th;
-        }
-
-        private static Thickness GetThickness(PresentationPaddingInfo pmAttr)
-        {
-            Thickness th = new Thickness();
-            if (pmAttr != null)
-            {
-                double l = 0, t = 0, r = 0, b = 0;
-                //и так, разбераем все по этапно с последовательностью проверки от еденичного значения к двочно и общему
                 if (pmAttr.All != 0)
                     l = t = r = b = pmAttr.All;
                 else if (pmAttr.LeftRight != 0 || pmAttr.TopButtom != 0)

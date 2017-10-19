@@ -12,5 +12,17 @@ namespace NTW.Presentation.Attributes
         public string CaptionName { get; set; }
 
         public TextWrapping PresentCaption { get; set; }
+
+        public double MaxHeight { get; set; }
+
+        public double MinHeight { get; set; }
+
+        public double MaxWidth { get; set; }
+
+        public double MinWidth { get; set; }
+
+        public VerticalAlignment VAlignment { get; set; }
+
+        public HorizontalAlignment HAlignment { get; set; }
     }
 }

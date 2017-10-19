@@ -14,7 +14,7 @@ namespace NTW.Presentation
         #endregion
 
         public KeyValue(TKey key, TValue value) {
-            _firstvalue = new DataKey<TKey>(key);
+            _firstvalue = new DataKey<TKey>(key, null);
             _secondValue = value;
         }
 

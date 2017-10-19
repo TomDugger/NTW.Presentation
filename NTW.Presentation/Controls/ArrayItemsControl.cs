@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Windows;
 using System.ComponentModel;
+using System.Windows.Controls;
 
 namespace NTW.Presentation
 {
@@ -15,6 +16,15 @@ namespace NTW.Presentation
         }
 
         public ArrayItemsControl() {
+
+            ControlTemplate container = new ControlTemplate(typeof(ArrayItemsControl<T>));
+            FrameworkElementFactory ScrollViewItemsPresenter = new FrameworkElementFactory(typeof(ScrollViewer));
+            ScrollViewItemsPresenter.SetValue(ScrollViewer.HorizontalScrollBarVisibilityProperty, ScrollBarVisibility.Disabled);
+            FrameworkElementFactory itemsPreseter = new FrameworkElementFactory(typeof(ItemsPresenter));
+            ScrollViewItemsPresenter.AppendChild(itemsPreseter);
+            container.VisualTree = ScrollViewItemsPresenter;
+            this.Template = container;
+
             if (ContextProperty.GetMetadata(typeof(ArrayItemsControl<T>)) as UIPropertyMetadata == null)
                 ContextProperty.OverrideMetadata(typeof(ArrayItemsControl<T>), new UIPropertyMetadata((o, e) => {
                     List<Item<T>> temp = new List<Item<T>>();

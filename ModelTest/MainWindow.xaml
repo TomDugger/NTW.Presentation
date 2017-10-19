@@ -3,13 +3,13 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         Title="MainWindow" Height="350" Width="525">
     <Grid>
-        <Grid.RowDefinitions>
+        <!--<Grid.RowDefinitions>
             <RowDefinition Height="40" />
             <RowDefinition Height="*" />
         </Grid.RowDefinitions>
-        <Button Content="Refresh" Click="Button_Click" />
+        <Button Content="Refresh" Click="Button_Click" />-->
         <ScrollViewer Grid.Row="1">
-            <Label Content="{Binding Path=.}" HorizontalContentAlignment="Stretch" Name="Container" />
+            <Label Content="{Binding Path=.}" HorizontalContentAlignment="Stretch" Name="label" />
         </ScrollViewer>
     </Grid>
 </Window>
