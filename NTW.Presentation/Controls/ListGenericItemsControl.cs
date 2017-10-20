@@ -7,6 +7,7 @@ using System.Windows.Controls;
 using System.Windows;
 using System.ComponentModel;
 using System.Windows.Data;
+using System.Windows.Input;
 
 namespace NTW.Presentation
 {
@@ -76,8 +77,14 @@ namespace NTW.Presentation
 
                     if (typeof(T) == typeof(string))
                         value = Activator.CreateInstance(typeof(T), new object[] { "value".ToCharArray() });
+                    else if (typeof(T).GetInterface(typeof(ICommand).Name) != null)
+                    {
+                        Action<object> f = new Action<object>(x => { });
+                        value = Activator.CreateInstance(typeof(T), new object[] { f, null });
+                    }
                     else
                         value = Activator.CreateInstance(typeof(T));
+
                     if (Context != null) {
                         Context.Add((T)value);
                         Item<T> item = new Item<T>(Context.Count, (T)value);

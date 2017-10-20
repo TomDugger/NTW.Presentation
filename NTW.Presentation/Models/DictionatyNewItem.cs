@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.ComponentModel;
 using System.Windows.Controls;
+using System.Windows.Input;
 
 namespace NTW.Presentation
 {
@@ -25,6 +26,11 @@ namespace NTW.Presentation
             object value;
             if (type == typeof(string))
                 value = Activator.CreateInstance(type, new object[] { "value".ToCharArray() });
+            else if (type.GetInterface(typeof(ICommand).Name) != null)
+            {
+                Action<object> f = new Action<object>(x => { });
+                value = Activator.CreateInstance(type, new object[] { f, null });
+            }
             else
                 value = Activator.CreateInstance(type);
 

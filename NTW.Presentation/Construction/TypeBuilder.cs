@@ -88,8 +88,9 @@ namespace NTW.Presentation.Construction
 
         private static FrameworkElementFactory CreateTemplateFromType(Type type)
         {
-            FrameworkElementFactory Container = new FrameworkElementFactory(typeof(Grid));
-            if (type.IsClass)
+            if (type == typeof(String))
+                return null;
+            else if (type.IsClass)
             {
                 if (type.IsArray)
                     return CreateArrayType(type);
@@ -104,11 +105,17 @@ namespace NTW.Presentation.Construction
                     else
                         return CreateTemplateClass(type);
                 }
+                else if (type.GetInterface(typeof(ICommand).Name) != null)
+                    return CreateCommandType(type);
                 else
                     return CreateTemplateClass(type);
             }
+            else if (type.IsInterface)
+            {
+                return CreateTemplateClass(type);
+            }
 
-            return Container;
+            return null;
         }
 
         private static FrameworkElementFactory CreateTemplateClass(Type type)
@@ -126,6 +133,7 @@ namespace NTW.Presentation.Construction
             #endregion
 
             #region Свойства
+            Dictionary<string, FrameworkElementFactory> Groups = new Dictionary<string, FrameworkElementFactory>();
             if(nonPresenatry == null)
                 foreach (PropertyInfo property in type.GetProperties())
                 {
@@ -136,6 +144,7 @@ namespace NTW.Presentation.Construction
                     PresentationInfo pAttr = attributes.Find((x) => x is PresentationInfo) as PresentationInfo;
                     PresentationCollectionInfo pcAttr = attributes.Find((x) => x is PresentationCollectionInfo) as PresentationCollectionInfo;
                     PresentationMarginInfo pmAttr = attributes.Find((x) => x is PresentationMarginInfo) as PresentationMarginInfo;
+                    PresentationGroupInfo pgi = attributes.Find((x) => x is PresentationGroupInfo) as PresentationGroupInfo;
                     #endregion
                     if (nattr == null)
                     {
@@ -157,12 +166,35 @@ namespace NTW.Presentation.Construction
                             ContainerPanel.AppendChild(CreateClassType(property.Name, pAttr));
                         #endregion
 
-                        Panel.AppendChild(ContainerPanel);
+                        if (pgi != null)
+                        {
+                            if (!Groups.ContainsKey(pgi.GroupName))
+                            {
+                                var t = CreateGroups(pgi.GroupName);
+                                Panel.AppendChild(t.Item1);
+                                Groups.Add(pgi.GroupName, t.Item2);
+                            }
+                            Groups[pgi.GroupName].AppendChild(ContainerPanel);
+                        }
+                        else
+                            Panel.AppendChild(ContainerPanel);
                     }
                 }
             #endregion
 
             return Panel;
+        }
+
+        private static Tuple<FrameworkElementFactory, FrameworkElementFactory> CreateGroups(string GroupName)
+        {
+            FrameworkElementFactory Groups = new FrameworkElementFactory(typeof(Expander));
+            Groups.SetValue(Expander.HeaderProperty, GroupName);
+
+            FrameworkElementFactory ContentGroupsPanel = new FrameworkElementFactory(typeof(StackPanel));
+
+            Groups.AppendChild(ContentGroupsPanel);
+
+            return Tuple.Create<FrameworkElementFactory, FrameworkElementFactory>(Groups, ContentGroupsPanel);
         }
 
         private static FrameworkElementFactory CreateCaption(string propertyName, PresentationInfo pAttr)
@@ -174,6 +206,28 @@ namespace NTW.Presentation.Construction
             return Caption;
         }
 
+        private static Style CreateStyleFromAsync()
+        {
+            Style style = new Style(typeof(ContentControl));
+
+            ControlTemplate cTemplate = new ControlTemplate(typeof(ContentControl));
+            FrameworkElementFactory grid = new FrameworkElementFactory(typeof(Grid));
+            
+            FrameworkElementFactory text = new FrameworkElementFactory(typeof(TextBlock));
+            text.SetValue(TextBlock.TextProperty, "Загрузка!!!");
+            grid.AppendChild(text);
+
+            cTemplate.VisualTree = grid;
+
+            Trigger tg = new Trigger();
+            tg.Property = ContentControl.ContentProperty;
+            tg.Value = null;
+            tg.Setters.Add(new Setter(ContentControl.TemplateProperty, cTemplate));
+            style.Triggers.Add(tg);
+
+            return style;
+        }
+
         #region обработки типов по признаку
         private static FrameworkElementFactory CreateSimpleType(PropertyInfo property)
         {
@@ -183,7 +237,8 @@ namespace NTW.Presentation.Construction
                 Property = new FrameworkElementFactory(typeof(TextBlock));
                 Property.SetBinding(TextBlock.TextProperty, new Binding(property.Name) {
                     UpdateSourceTrigger = UpdateSourceTrigger.PropertyChanged,
-                    Mode = BindingMode.OneWay
+                    Mode = BindingMode.OneWay, 
+                    IsAsync = true
                 });
             }
             else
@@ -191,10 +246,11 @@ namespace NTW.Presentation.Construction
                 if (property.PropertyType == typeof(bool))
                 {
                     Property = new FrameworkElementFactory(typeof(ToggleButton));
-                    Property.SetBinding(ToggleButton.ContentProperty, new Binding(property.Name));
+                    Property.SetBinding(ToggleButton.ContentProperty, new Binding(property.Name) { IsAsync = true });
                     Property.SetBinding(CheckBox.IsCheckedProperty, new Binding(property.Name) {
                         UpdateSourceTrigger = UpdateSourceTrigger.PropertyChanged,
-                        Mode = BindingMode.TwoWay
+                        Mode = BindingMode.TwoWay,
+                        IsAsync = true
                     });
                 }
                 else
@@ -202,7 +258,8 @@ namespace NTW.Presentation.Construction
                     Property = new FrameworkElementFactory(typeof(TextBox));
                     Property.SetBinding(TextBox.TextProperty, new Binding(property.Name) {
                         UpdateSourceTrigger = UpdateSourceTrigger.PropertyChanged,
-                        Mode = BindingMode.TwoWay
+                        Mode = BindingMode.TwoWay,
+                        IsAsync = true
                     });
                 }
             }
@@ -216,19 +273,21 @@ namespace NTW.Presentation.Construction
                 Property = new FrameworkElementFactory(typeof(TextBlock));
                 Property.SetBinding(TextBlock.TextProperty, new Binding(property.Name) {
                     UpdateSourceTrigger = UpdateSourceTrigger.PropertyChanged,
-                    Mode = BindingMode.OneWay
+                    Mode = BindingMode.OneWay,
+                    IsAsync = true
                 });
             }
             else {
                 Property = new FrameworkElementFactory(typeof(ComboBox));
                 Property.SetResourceReference(ComboBox.DataContextProperty, property.PropertyType.FullName);
-                Property.SetBinding(ComboBox.ItemsSourceProperty, new Binding("."));
+                Property.SetBinding(ComboBox.ItemsSourceProperty, new Binding(".") { IsAsync = true });
 
                 EnumBuilder.AddEnumResource(property.PropertyType);
 
                 Property.SetBinding(ComboBox.SelectedValueProperty, new Binding("DataContext." + property.Name) {
                     ElementName = "BackPanel",
-                    UpdateSourceTrigger = UpdateSourceTrigger.PropertyChanged
+                    UpdateSourceTrigger = UpdateSourceTrigger.PropertyChanged,
+                    IsAsync = true
                 });
             }
             return Property;
@@ -251,7 +310,7 @@ namespace NTW.Presentation.Construction
             }
 
             Property.SetValue(ContentControl.PaddingProperty, new Thickness(20, 0, 0, 0));
-            Property.SetBinding(ContentControl.ContentProperty, new Binding(PropertyName));
+            Property.SetBinding(ContentControl.ContentProperty, new Binding(PropertyName) { IsAsync = true});
             Property.SetValue(ContentControl.HorizontalContentAlignmentProperty, System.Windows.HorizontalAlignment.Stretch);
             return Property;
         }
@@ -266,7 +325,7 @@ namespace NTW.Presentation.Construction
                 Property.SetValue(ItemsControl.PaddingProperty, new Thickness(20, 0, 0, 0));
 
                 Property.SetValue(ItemsControl.HorizontalContentAlignmentProperty, HorizontalAlignment.Stretch);
-                Property.SetBinding(BaseItemsControl.ContextProperty, new Binding("."));
+                Property.SetBinding(BaseItemsControl.ContextProperty, new Binding(".") { IsAsync = true});
 
                 if (AType.BaseType == typeof(Enum)) {
                     AddTemplateEnumToResource(AType);
@@ -284,7 +343,7 @@ namespace NTW.Presentation.Construction
                 Property.SetValue(ScrollViewer.HorizontalScrollBarVisibilityProperty, ScrollBarVisibility.Disabled);
                 Property.SetValue(ItemsControl.PaddingProperty, new Thickness(20, 0, 0, 0));
                 Property.SetValue(ItemsControl.HorizontalContentAlignmentProperty, HorizontalAlignment.Stretch);
-                Property.SetBinding(ItemsControl.ItemsSourceProperty, new Binding("."));
+                Property.SetBinding(ItemsControl.ItemsSourceProperty, new Binding(".") { IsAsync = true });
                 Property.SetResourceReference(ItemsControl.ItemTemplateProperty, new DataTemplateKey(AType));
                 return Property;
             }
@@ -301,9 +360,9 @@ namespace NTW.Presentation.Construction
             Property.SetValue(ItemsControl.PaddingProperty, new Thickness(20, 0, 0, 0));
 
             if (SimpleTypes.Contains(AType) || AType.BaseType == typeof(Enum))
-                Property.SetBinding(BaseItemsControl.ContextProperty, new Binding(".") { UpdateSourceTrigger = UpdateSourceTrigger.PropertyChanged});
+                Property.SetBinding(BaseItemsControl.ContextProperty, new Binding(".") { UpdateSourceTrigger = UpdateSourceTrigger.PropertyChanged, IsAsync = true });
             else
-                Property.SetBinding(BaseItemsControl.ItemsSourceProperty, new Binding("."));
+                Property.SetBinding(BaseItemsControl.ItemsSourceProperty, new Binding(".") { IsAsync = true});
             if (AType.BaseType == typeof(Enum)) {
                 AddTemplateEnumToResource(AType, true);
                 Property.SetResourceReference(ItemsControl.ItemTemplateProperty, "T_" + AType.FullName);
@@ -329,9 +388,9 @@ namespace NTW.Presentation.Construction
             Property.SetValue(ItemsControl.PaddingProperty, new Thickness(20, 0, 0, 0));
 
             if (SimpleTypes.Contains(AType) || AType.BaseType == typeof(Enum))
-                Property.SetBinding(BaseItemsControl.ContextProperty, new Binding(".") { UpdateSourceTrigger = UpdateSourceTrigger.PropertyChanged });
+                Property.SetBinding(BaseItemsControl.ContextProperty, new Binding(".") { UpdateSourceTrigger = UpdateSourceTrigger.PropertyChanged, IsAsync = true });
             else
-                Property.SetBinding(BaseItemsControl.ItemsSourceProperty, new Binding("."));
+                Property.SetBinding(BaseItemsControl.ItemsSourceProperty, new Binding(".") { IsAsync = true });
             if (AType.BaseType == typeof(Enum)) {
                 AddTemplateEnumToResource(AType, true);
                 Property.SetResourceReference(ItemsControl.ItemTemplateProperty, "T_" + AType.FullName);
@@ -356,7 +415,7 @@ namespace NTW.Presentation.Construction
             Property.SetValue(ScrollViewer.HorizontalScrollBarVisibilityProperty, ScrollBarVisibility.Disabled);
             Property.SetValue(ItemsControl.HorizontalContentAlignmentProperty, HorizontalAlignment.Stretch);
 
-            Property.SetBinding(BaseItemsControl.ContextProperty, new Binding("."));
+            Property.SetBinding(BaseItemsControl.ContextProperty, new Binding(".") { IsAsync = true });
 
             Property.SetValue(ItemsControl.ItemTemplateProperty, GenerateItemDictionaryTemplate(VType));
             return Property;
@@ -366,7 +425,15 @@ namespace NTW.Presentation.Construction
         {
             FrameworkElementFactory Property = new FrameworkElementFactory(typeof(Button));
             Property.SetValue(Button.ContentProperty, "Run");
-            Property.SetBinding(Button.CommandProperty, new Binding(property.Name) { });
+            Property.SetBinding(Button.CommandProperty, new Binding(property.Name) { IsAsync = true });
+            return Property;
+        }
+
+        private static FrameworkElementFactory CreateCommandType(Type property)
+        {
+            FrameworkElementFactory Property = new FrameworkElementFactory(typeof(Button));
+            Property.SetValue(Button.ContentProperty, "Run");
+            Property.SetBinding(Button.CommandProperty, new Binding(".") { IsAsync = true });
             return Property;
         }
         #endregion
@@ -389,13 +456,14 @@ namespace NTW.Presentation.Construction
                 DeleteButton.SetValue(Grid.ColumnProperty, 1);
                 DeleteButton.SetBinding(Button.CommandProperty, new Binding("RemoveCommand") {
                     RelativeSource = new RelativeSource(RelativeSourceMode.FindAncestor, typeof(BaseItemsControl), 1),
+                    IsAsync = true
                 });
-                DeleteButton.SetBinding(Button.CommandParameterProperty, new Binding("."));
+                DeleteButton.SetBinding(Button.CommandParameterProperty, new Binding(".") { IsAsync = true });
 
                 Container.AppendChild(DeleteButton);
             }
             FrameworkElementFactory Property = new FrameworkElementFactory(typeof(TextBox));
-            Binding bn = new Binding("Value") { Mode = BindingMode.TwoWay, UpdateSourceTrigger = UpdateSourceTrigger.PropertyChanged };
+            Binding bn = new Binding("Value") { Mode = BindingMode.TwoWay, UpdateSourceTrigger = UpdateSourceTrigger.PropertyChanged, IsAsync = true };
             bn.ValidationRules.Add(new DataErrorValidationRule());
             Property.SetBinding(TextBox.TextProperty, bn);
             Container.AppendChild(Property);
@@ -420,14 +488,15 @@ namespace NTW.Presentation.Construction
                 DeleteButton.SetValue(Grid.ColumnProperty, 1);
                 DeleteButton.SetBinding(Button.CommandProperty, new Binding("RemoveCommand") {
                     RelativeSource = new RelativeSource(RelativeSourceMode.FindAncestor, typeof(BaseItemsControl), 1),
+                    IsAsync = true
                 });
-                DeleteButton.SetBinding(Button.CommandParameterProperty, new Binding("."));
+                DeleteButton.SetBinding(Button.CommandParameterProperty, new Binding(".") { IsAsync = true });
 
                 Container.AppendChild(DeleteButton);
             }
             FrameworkElementFactory Property = new FrameworkElementFactory(typeof(ToggleButton));
 
-            Binding bn = new Binding("Value") { Mode = BindingMode.TwoWay, UpdateSourceTrigger = UpdateSourceTrigger.PropertyChanged };
+            Binding bn = new Binding("Value") { Mode = BindingMode.TwoWay, UpdateSourceTrigger = UpdateSourceTrigger.PropertyChanged, IsAsync = true };
             bn.ValidationRules.Add(new DataErrorValidationRule());
 
             Property.SetBinding(ToggleButton.ContentProperty, bn);
@@ -457,13 +526,14 @@ namespace NTW.Presentation.Construction
             DeleteButton.SetValue(Button.VerticalAlignmentProperty, VerticalAlignment.Top);
             DeleteButton.SetBinding(Button.CommandProperty, new Binding("RemoveCommand") {
                 RelativeSource = new RelativeSource(RelativeSourceMode.FindAncestor, typeof(BaseItemsControl), 1),
+                IsAsync = true
             });
-            DeleteButton.SetBinding(Button.CommandParameterProperty, new Binding("."));
+            DeleteButton.SetBinding(Button.CommandParameterProperty, new Binding(".") { IsAsync = true});
 
             Container.AppendChild(DeleteButton);
 
             FrameworkElementFactory Property = new FrameworkElementFactory(typeof(Label));
-            Binding bn = new Binding(".") { Mode = BindingMode.TwoWay, UpdateSourceTrigger = UpdateSourceTrigger.PropertyChanged };
+            Binding bn = new Binding(".") { Mode = BindingMode.TwoWay, UpdateSourceTrigger = UpdateSourceTrigger.PropertyChanged, IsAsync = true };
             bn.ValidationRules.Add(new DataErrorValidationRule());
             Property.SetBinding(Label.ContentProperty, bn);
             Property.SetValue(Label.HorizontalContentAlignmentProperty, HorizontalAlignment.Stretch);
@@ -478,10 +548,10 @@ namespace NTW.Presentation.Construction
             DataTemplate template = new DataTemplate();
             FrameworkElementFactory Container = new FrameworkElementFactory(typeof(Expander));
 
-            Container.SetBinding(Expander.HeaderProperty, new Binding("Key.Value"));
+            Container.SetBinding(Expander.HeaderProperty, new Binding("Key.Value") { IsAsync = true});
 
             FrameworkElementFactory Property = new FrameworkElementFactory(typeof(Label));
-            Property.SetBinding(Label.ContentProperty, new Binding("."));
+            Property.SetBinding(Label.ContentProperty, new Binding(".") { IsAsync = true });
 
             Property.SetValue(Label.HorizontalContentAlignmentProperty, HorizontalAlignment.Stretch);
 
@@ -494,7 +564,7 @@ namespace NTW.Presentation.Construction
             else if (SimpleTypes.Contains(type))
                 Property.SetResourceReference(Label.ContentTemplateProperty, "ItemSimple");
             else {
-                Property.SetBinding(Label.ContentProperty, new Binding("Value"));
+                Property.SetBinding(Label.ContentProperty, new Binding("Value") { IsAsync = true });
                 Property.SetResourceReference(Label.ContentTemplateProperty, "ItemClass");
             }
 
@@ -521,21 +591,23 @@ namespace NTW.Presentation.Construction
                 DeleteButton.SetValue(Grid.ColumnProperty, 1);
                 DeleteButton.SetBinding(Button.CommandProperty, new Binding("RemoveCommand") {
                     RelativeSource = new RelativeSource(RelativeSourceMode.FindAncestor, typeof(BaseItemsControl), 1),
+                    IsAsync = true
                 });
-                DeleteButton.SetBinding(Button.CommandParameterProperty, new Binding("."));
+                DeleteButton.SetBinding(Button.CommandParameterProperty, new Binding(".") { IsAsync = true });
 
                 Container.AppendChild(DeleteButton);
             }
 
             FrameworkElementFactory Property = new FrameworkElementFactory(typeof(ComboBox));
             Property.SetResourceReference(ComboBox.DataContextProperty, i.FullName);
-            Property.SetBinding(ComboBox.ItemsSourceProperty, new Binding("."));
+            Property.SetBinding(ComboBox.ItemsSourceProperty, new Binding(".") { IsAsync = true });
 
             EnumBuilder.AddEnumResource(i);
 
             Property.SetBinding(ComboBox.SelectedValueProperty, new Binding("DataContext.Value") {
                 RelativeSource = new RelativeSource(RelativeSourceMode.FindAncestor, typeof(Grid), 1),
-                UpdateSourceTrigger = UpdateSourceTrigger.PropertyChanged
+                UpdateSourceTrigger = UpdateSourceTrigger.PropertyChanged,
+                IsAsync = true
             });
 
             Container.AppendChild(Property);
@@ -581,6 +653,8 @@ namespace NTW.Presentation.Construction
         {
             Application app = Application.Current;
 
+            //app.Resources.Add(new DataTemplateKey(typeof(ContentControl)), CreateStyleFromAsync());
+
             app.Resources.Add("ItemSimple", GenerateItemSimpleTemplate());
             app.Resources.Add("ItemSimpleD", GenerateItemSimpleTemplate(true));
 
@@ -589,9 +663,14 @@ namespace NTW.Presentation.Construction
 
             app.Resources.Add("ItemClassD", GenerateItemClassTemplateFromDelete());
 
+            var types = GetTypes(condition);
             foreach (Type i in GetTypes(condition))
                 if (Application.Current.TryFindResource(new DataTemplateKey(i)) == null)
-                    Application.Current.Resources.Add(new DataTemplateKey(i), new DataTemplate() { VisualTree = CreateTemplateFromType(i) });
+                {
+                    FrameworkElementFactory Container;
+                    if ((Container = CreateTemplateFromType(i)) != null)
+                        Application.Current.Resources.Add(new DataTemplateKey(i), new DataTemplate() { VisualTree = Container });
+                }
         }
     }
 }

@@ -15,7 +15,7 @@ namespace ModelTest
         protected override void OnStartup(StartupEventArgs e)
         {
             base.OnStartup(e);
-            NTW.Presentation.Presentation.Generation(t => t == typeof(ModelTest.Test.PresentationItem));//, es => es.Namespace == "ModelTest");
+            //NTW.Presentation.Presentation.Generation(t => t == typeof(ModelTest.Test.Presentation) || t == typeof(ModelTest.Test.ChildrenMyInterface) || t == typeof(ModelTest.Test.Children2MyInterface));//, es => es.Namespace == "ModelTest");
         }
     }
 }

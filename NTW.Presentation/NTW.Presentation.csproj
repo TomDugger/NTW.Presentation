@@ -44,6 +44,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Attributes\NonPresentation.cs" />
+    <Compile Include="Attributes\PresentationGroupInfo.cs" />
     <Compile Include="Attributes\PresentationInfo.cs" />
     <Compile Include="Attributes\PresentationMarginInfo.cs" />
     <Compile Include="Attributes\PresentationCollectionInfo.cs" />
@@ -54,7 +55,6 @@
     <Compile Include="Controls\DictionaryItemsControl.cs" />
     <Compile Include="Controls\ListGenericItemsControl.cs" />
     <Compile Include="Controls\ListItemsControl.cs" />
-    <Compile Include="IPresentation.cs" />
     <Compile Include="Models\DataKey.cs" />
     <Compile Include="Models\DictionatyNewItem.cs" />
     <Compile Include="Models\Item.cs" />
@@ -73,6 +73,9 @@
       <Project>{E79C9A45-CAA3-4837-9FC9-A11B8E6A60DD}</Project>
       <Name>NTW.Commands</Name>
     </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="Styles\" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

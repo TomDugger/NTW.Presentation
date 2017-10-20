@@ -49,7 +49,8 @@ namespace NTW.Presentation.Construction
                 odp.MethodParameters.Add(i);
                 odp.ObjectType = typeof(Enum);
 
-                app.Resources.Add(i.FullName, odp);
+                if (app.TryFindResource(i.FullName) == null)
+                    app.Resources.Add(i.FullName, odp);
             }
         }
     }
