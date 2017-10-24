@@ -214,9 +214,10 @@ namespace ModelTest.Test
 
         #region Class
         [PresentationGroupInfo(GroupName = "Class")]
+        [PresentationBinding]
         public PresentationItem ValueClass 
         {
-            get { Thread.Sleep(5000); return p; }
+            get { Thread.Sleep(15000); return p; }
             set { p = value; }
         } 
         #endregion

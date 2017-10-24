@@ -44,8 +44,10 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Attributes\NonPresentation.cs" />
+    <Compile Include="Attributes\PresentationBinding.cs" />
     <Compile Include="Attributes\PresentationGroupInfo.cs" />
     <Compile Include="Attributes\PresentationInfo.cs" />
+    <Compile Include="Attributes\PresentationInterface.cs" />
     <Compile Include="Attributes\PresentationMarginInfo.cs" />
     <Compile Include="Attributes\PresentationCollectionInfo.cs" />
     <Compile Include="Construction\EnumBuilder.cs" />

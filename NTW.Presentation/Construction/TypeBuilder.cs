@@ -10,6 +10,9 @@ using System.Windows.Data;
 using System.Windows.Controls.Primitives;
 using System.Collections;
 using System.Windows.Input;
+using System.Windows.Shapes;
+using System.Windows.Media;
+using System.Windows.Media.Animation;
 
 namespace NTW.Presentation.Construction
 {
@@ -145,6 +148,7 @@ namespace NTW.Presentation.Construction
                     PresentationCollectionInfo pcAttr = attributes.Find((x) => x is PresentationCollectionInfo) as PresentationCollectionInfo;
                     PresentationMarginInfo pmAttr = attributes.Find((x) => x is PresentationMarginInfo) as PresentationMarginInfo;
                     PresentationGroupInfo pgi = attributes.Find((x) => x is PresentationGroupInfo) as PresentationGroupInfo;
+                    PresentationBinding pbind = attributes.Find((x) => x is PresentationBinding) as PresentationBinding;
                     #endregion
                     if (nattr == null)
                     {
@@ -163,7 +167,7 @@ namespace NTW.Presentation.Construction
                         else if (property.PropertyType.GetInterface(typeof(ICommand).Name) != null)
                             ContainerPanel.AppendChild(CreateCommandType(property));
                         else
-                            ContainerPanel.AppendChild(CreateClassType(property.Name, pAttr));
+                            ContainerPanel.AppendChild(CreateClassType(property.Name, pAttr, pbind));
                         #endregion
 
                         if (pgi != null)
@@ -212,17 +216,45 @@ namespace NTW.Presentation.Construction
 
             ControlTemplate cTemplate = new ControlTemplate(typeof(ContentControl));
             FrameworkElementFactory grid = new FrameworkElementFactory(typeof(Grid));
-            
-            FrameworkElementFactory text = new FrameworkElementFactory(typeof(TextBlock));
-            text.SetValue(TextBlock.TextProperty, "Загрузка!!!");
-            grid.AppendChild(text);
+            FrameworkElementFactory rectangle = new FrameworkElementFactory(typeof(Rectangle));
+            rectangle.SetValue(Rectangle.NameProperty, "rec1");
+            rectangle.SetValue(Rectangle.FillProperty, new SolidColorBrush(Colors.DodgerBlue));
+            rectangle.SetValue(Rectangle.WidthProperty, 46.0);
+            rectangle.SetValue(Rectangle.HeightProperty, 46.0);
 
+            RotateTransform rt = new RotateTransform();
+            rt.CenterX = 23;
+            rt.CenterY = 23;
+
+            rectangle.SetValue(Rectangle.RenderTransformProperty, rt);
+
+            grid.AppendChild(rectangle);
             cTemplate.VisualTree = grid;
+
+            Storyboard sb = new Storyboard();
+            DoubleAnimation da = new DoubleAnimation();
+            da.From = 0;
+            da.To = 360;
+            da.Duration = new Duration(new TimeSpan(0, 0, 2));
+            da.EasingFunction = new PowerEase() { EasingMode = EasingMode.EaseInOut};
+            da.RepeatBehavior = RepeatBehavior.Forever;
+            sb.Children.Add(da);
+            Storyboard.SetTargetProperty(da, new PropertyPath("RenderTransform.Angle"));
+
+            BeginStoryboard bsb = new BeginStoryboard();
+            bsb.Storyboard = sb;
+            EventTrigger trig = new EventTrigger(Control.LoadedEvent);
+            trig.Actions.Add(bsb);
+
+            Style st = new Style(typeof(Rectangle));
+            st.Triggers.Add(trig);
+            rectangle.SetValue(Rectangle.StyleProperty, st);
 
             Trigger tg = new Trigger();
             tg.Property = ContentControl.ContentProperty;
             tg.Value = null;
             tg.Setters.Add(new Setter(ContentControl.TemplateProperty, cTemplate));
+
             style.Triggers.Add(tg);
 
             return style;
@@ -231,6 +263,7 @@ namespace NTW.Presentation.Construction
         #region обработки типов по признаку
         private static FrameworkElementFactory CreateSimpleType(PropertyInfo property)
         {
+            PresentationBinding pBind = System.Attribute.GetCustomAttributes(property).ToList().Find((x) => x is PresentationBinding) as PresentationBinding;
             FrameworkElementFactory Property;
             if (!property.CanWrite)
             {
@@ -238,7 +271,7 @@ namespace NTW.Presentation.Construction
                 Property.SetBinding(TextBlock.TextProperty, new Binding(property.Name) {
                     UpdateSourceTrigger = UpdateSourceTrigger.PropertyChanged,
                     Mode = BindingMode.OneWay, 
-                    IsAsync = true
+                    IsAsync = pBind != null ? pBind.IsAsync: false
                 });
             }
             else
@@ -250,7 +283,7 @@ namespace NTW.Presentation.Construction
                     Property.SetBinding(CheckBox.IsCheckedProperty, new Binding(property.Name) {
                         UpdateSourceTrigger = UpdateSourceTrigger.PropertyChanged,
                         Mode = BindingMode.TwoWay,
-                        IsAsync = true
+                        IsAsync = pBind != null ? pBind.IsAsync : false
                     });
                 }
                 else
@@ -259,7 +292,7 @@ namespace NTW.Presentation.Construction
                     Property.SetBinding(TextBox.TextProperty, new Binding(property.Name) {
                         UpdateSourceTrigger = UpdateSourceTrigger.PropertyChanged,
                         Mode = BindingMode.TwoWay,
-                        IsAsync = true
+                        IsAsync = pBind != null ? pBind.IsAsync : false
                     });
                 }
             }
@@ -268,13 +301,14 @@ namespace NTW.Presentation.Construction
         }
 
         private static FrameworkElementFactory CreateEnumType(PropertyInfo property) {
+            PresentationBinding pBind = System.Attribute.GetCustomAttributes(property).ToList().Find((x) => x is PresentationBinding) as PresentationBinding;
             FrameworkElementFactory Property;
             if (!property.CanWrite) {
                 Property = new FrameworkElementFactory(typeof(TextBlock));
                 Property.SetBinding(TextBlock.TextProperty, new Binding(property.Name) {
                     UpdateSourceTrigger = UpdateSourceTrigger.PropertyChanged,
                     Mode = BindingMode.OneWay,
-                    IsAsync = true
+                    IsAsync = pBind != null ? pBind.IsAsync : false
                 });
             }
             else {
@@ -287,13 +321,14 @@ namespace NTW.Presentation.Construction
                 Property.SetBinding(ComboBox.SelectedValueProperty, new Binding("DataContext." + property.Name) {
                     ElementName = "BackPanel",
                     UpdateSourceTrigger = UpdateSourceTrigger.PropertyChanged,
-                    IsAsync = true
+                    IsAsync = pBind != null ? pBind.IsAsync : false
                 });
             }
             return Property;
         }
 
-        private static FrameworkElementFactory CreateClassType(string PropertyName, PresentationInfo pinfo = null) {
+        private static FrameworkElementFactory CreateClassType(string PropertyName, PresentationInfo pinfo = null, PresentationBinding pbind = null) {
+
             FrameworkElementFactory Property = new FrameworkElementFactory(typeof(ContentControl));
 
             if (pinfo != null)
@@ -310,13 +345,16 @@ namespace NTW.Presentation.Construction
             }
 
             Property.SetValue(ContentControl.PaddingProperty, new Thickness(20, 0, 0, 0));
-            Property.SetBinding(ContentControl.ContentProperty, new Binding(PropertyName) { IsAsync = true});
+            Property.SetBinding(ContentControl.ContentProperty, new Binding(PropertyName) { IsAsync = pbind != null ? pbind.IsAsync : false});
+            if (pbind != null && pbind.IsAsync)
+                Property.SetResourceReference(ContentControl.StyleProperty, "IsAsyncStyle");
             Property.SetValue(ContentControl.HorizontalContentAlignmentProperty, System.Windows.HorizontalAlignment.Stretch);
             return Property;
         }
 
         private static FrameworkElementFactory CreateArrayType(Type property)
         {
+            PresentationBinding pbind = System.Attribute.GetCustomAttributes(property).ToList().Find((x) => x is PresentationBinding) as PresentationBinding; 
             Type AType = property.GetElementType();
             if (SimpleTypes.Contains(AType) || AType.BaseType == typeof(Enum)) {
                 Type BType = typeof(ArrayItemsControl<>).MakeGenericType(AType);
@@ -325,7 +363,7 @@ namespace NTW.Presentation.Construction
                 Property.SetValue(ItemsControl.PaddingProperty, new Thickness(20, 0, 0, 0));
 
                 Property.SetValue(ItemsControl.HorizontalContentAlignmentProperty, HorizontalAlignment.Stretch);
-                Property.SetBinding(BaseItemsControl.ContextProperty, new Binding(".") { IsAsync = true});
+                Property.SetBinding(BaseItemsControl.ContextProperty, new Binding(".") { IsAsync = pbind != null ? pbind.IsAsync : false});
 
                 if (AType.BaseType == typeof(Enum)) {
                     AddTemplateEnumToResource(AType);
@@ -343,7 +381,7 @@ namespace NTW.Presentation.Construction
                 Property.SetValue(ScrollViewer.HorizontalScrollBarVisibilityProperty, ScrollBarVisibility.Disabled);
                 Property.SetValue(ItemsControl.PaddingProperty, new Thickness(20, 0, 0, 0));
                 Property.SetValue(ItemsControl.HorizontalContentAlignmentProperty, HorizontalAlignment.Stretch);
-                Property.SetBinding(ItemsControl.ItemsSourceProperty, new Binding(".") { IsAsync = true });
+                Property.SetBinding(ItemsControl.ItemsSourceProperty, new Binding(".") { IsAsync = pbind != null ? pbind.IsAsync : false });
                 Property.SetResourceReference(ItemsControl.ItemTemplateProperty, new DataTemplateKey(AType));
                 return Property;
             }
@@ -351,6 +389,7 @@ namespace NTW.Presentation.Construction
 
         private static FrameworkElementFactory CreateListType(Type property)
         {
+            PresentationBinding pbind = System.Attribute.GetCustomAttributes(property).ToList().Find((x) => x is PresentationBinding) as PresentationBinding;
             Type AType = property.GetGenericArguments()[0];
             Type BType = typeof(ListItemsControl<>).MakeGenericType(AType);
             FrameworkElementFactory Property = new FrameworkElementFactory(BType);
@@ -360,9 +399,9 @@ namespace NTW.Presentation.Construction
             Property.SetValue(ItemsControl.PaddingProperty, new Thickness(20, 0, 0, 0));
 
             if (SimpleTypes.Contains(AType) || AType.BaseType == typeof(Enum))
-                Property.SetBinding(BaseItemsControl.ContextProperty, new Binding(".") { UpdateSourceTrigger = UpdateSourceTrigger.PropertyChanged, IsAsync = true });
+                Property.SetBinding(BaseItemsControl.ContextProperty, new Binding(".") { UpdateSourceTrigger = UpdateSourceTrigger.PropertyChanged, IsAsync = pbind != null ? pbind.IsAsync : false});
             else
-                Property.SetBinding(BaseItemsControl.ItemsSourceProperty, new Binding(".") { IsAsync = true});
+                Property.SetBinding(BaseItemsControl.ItemsSourceProperty, new Binding(".") { IsAsync = pbind != null ? pbind.IsAsync : false });
             if (AType.BaseType == typeof(Enum)) {
                 AddTemplateEnumToResource(AType, true);
                 Property.SetResourceReference(ItemsControl.ItemTemplateProperty, "T_" + AType.FullName);
@@ -379,6 +418,8 @@ namespace NTW.Presentation.Construction
 
         private static FrameworkElementFactory CreateListGenericType(Type property)
         {
+            PresentationBinding pbind = System.Attribute.GetCustomAttributes(property).ToList().Find((x) => x is PresentationBinding) as PresentationBinding;
+
             Type AType = property.GetGenericArguments()[0];
             Type BType = typeof(ListGenericItemsControl<>).MakeGenericType(AType);
             FrameworkElementFactory Property = new FrameworkElementFactory(BType);
@@ -388,9 +429,9 @@ namespace NTW.Presentation.Construction
             Property.SetValue(ItemsControl.PaddingProperty, new Thickness(20, 0, 0, 0));
 
             if (SimpleTypes.Contains(AType) || AType.BaseType == typeof(Enum))
-                Property.SetBinding(BaseItemsControl.ContextProperty, new Binding(".") { UpdateSourceTrigger = UpdateSourceTrigger.PropertyChanged, IsAsync = true });
+                Property.SetBinding(BaseItemsControl.ContextProperty, new Binding(".") { UpdateSourceTrigger = UpdateSourceTrigger.PropertyChanged, IsAsync = pbind != null ? pbind.IsAsync : false });
             else
-                Property.SetBinding(BaseItemsControl.ItemsSourceProperty, new Binding(".") { IsAsync = true });
+                Property.SetBinding(BaseItemsControl.ItemsSourceProperty, new Binding(".") { IsAsync = pbind != null ? pbind.IsAsync : false });
             if (AType.BaseType == typeof(Enum)) {
                 AddTemplateEnumToResource(AType, true);
                 Property.SetResourceReference(ItemsControl.ItemTemplateProperty, "T_" + AType.FullName);
@@ -406,7 +447,8 @@ namespace NTW.Presentation.Construction
         }
 
         private static FrameworkElementFactory CreateDictionaryType(Type property)
-        { 
+        {
+            PresentationBinding pbind = System.Attribute.GetCustomAttributes(property).ToList().Find((x) => x is PresentationBinding) as PresentationBinding;
             Type KType = property.GetGenericArguments()[0];
             Type VType = property.GetGenericArguments()[1];
             Type MType = typeof(DictionaryItemsControl<,>).MakeGenericType(KType, VType);
@@ -415,7 +457,7 @@ namespace NTW.Presentation.Construction
             Property.SetValue(ScrollViewer.HorizontalScrollBarVisibilityProperty, ScrollBarVisibility.Disabled);
             Property.SetValue(ItemsControl.HorizontalContentAlignmentProperty, HorizontalAlignment.Stretch);
 
-            Property.SetBinding(BaseItemsControl.ContextProperty, new Binding(".") { IsAsync = true });
+            Property.SetBinding(BaseItemsControl.ContextProperty, new Binding(".") { IsAsync = pbind != null ? pbind.IsAsync : false });
 
             Property.SetValue(ItemsControl.ItemTemplateProperty, GenerateItemDictionaryTemplate(VType));
             return Property;
@@ -423,17 +465,19 @@ namespace NTW.Presentation.Construction
 
         private static FrameworkElementFactory CreateCommandType(PropertyInfo property)
         {
+            PresentationBinding pbind = System.Attribute.GetCustomAttributes(property).ToList().Find((x) => x is PresentationBinding) as PresentationBinding;
             FrameworkElementFactory Property = new FrameworkElementFactory(typeof(Button));
             Property.SetValue(Button.ContentProperty, "Run");
-            Property.SetBinding(Button.CommandProperty, new Binding(property.Name) { IsAsync = true });
+            Property.SetBinding(Button.CommandProperty, new Binding(property.Name) { IsAsync = pbind != null ? pbind.IsAsync : false });
             return Property;
         }
 
         private static FrameworkElementFactory CreateCommandType(Type property)
         {
+            PresentationBinding pbind = System.Attribute.GetCustomAttributes(property).ToList().Find((x) => x is PresentationBinding) as PresentationBinding;
             FrameworkElementFactory Property = new FrameworkElementFactory(typeof(Button));
             Property.SetValue(Button.ContentProperty, "Run");
-            Property.SetBinding(Button.CommandProperty, new Binding(".") { IsAsync = true });
+            Property.SetBinding(Button.CommandProperty, new Binding(".") { IsAsync = pbind != null ? pbind.IsAsync : false });
             return Property;
         }
         #endregion
@@ -653,7 +697,7 @@ namespace NTW.Presentation.Construction
         {
             Application app = Application.Current;
 
-            //app.Resources.Add(new DataTemplateKey(typeof(ContentControl)), CreateStyleFromAsync());
+            app.Resources.Add("IsAsyncStyle", CreateStyleFromAsync());
 
             app.Resources.Add("ItemSimple", GenerateItemSimpleTemplate());
             app.Resources.Add("ItemSimpleD", GenerateItemSimpleTemplate(true));
