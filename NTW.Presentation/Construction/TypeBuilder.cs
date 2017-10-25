@@ -216,6 +216,7 @@ namespace NTW.Presentation.Construction
 
             ControlTemplate cTemplate = new ControlTemplate(typeof(ContentControl));
             FrameworkElementFactory grid = new FrameworkElementFactory(typeof(Grid));
+            #region rec1
             FrameworkElementFactory rectangle = new FrameworkElementFactory(typeof(Rectangle));
             rectangle.SetValue(Rectangle.NameProperty, "rec1");
             rectangle.SetValue(Rectangle.FillProperty, new SolidColorBrush(Colors.DodgerBlue));
@@ -228,27 +229,96 @@ namespace NTW.Presentation.Construction
 
             rectangle.SetValue(Rectangle.RenderTransformProperty, rt);
 
-            grid.AppendChild(rectangle);
+            grid.AppendChild(rectangle); 
+            #endregion
+
+            #region rec2
+            FrameworkElementFactory rectangle1 = new FrameworkElementFactory(typeof(Rectangle));
+            rectangle1.SetValue(Rectangle.NameProperty, "rec2");
+            rectangle1.SetValue(Rectangle.FillProperty, new SolidColorBrush(Colors.Blue));
+            rectangle1.SetValue(Rectangle.WidthProperty, 46.0);
+            rectangle1.SetValue(Rectangle.HeightProperty, 46.0);
+
+            RotateTransform rt1 = new RotateTransform();
+            rt1.CenterX = 23;
+            rt1.CenterY = 23;
+
+            ScaleTransform sc1 = new ScaleTransform();
+            sc1.CenterX = 23;
+            sc1.CenterY = 23;
+
+            TransformGroup gr1 = new TransformGroup();
+            gr1.Children.Add(rt1);
+            gr1.Children.Add(sc1);
+
+            rectangle1.SetValue(Rectangle.RenderTransformProperty, gr1);
+
+            grid.AppendChild(rectangle1); 
+            #endregion
+
             cTemplate.VisualTree = grid;
 
+            #region style-rec1
             Storyboard sb = new Storyboard();
             DoubleAnimation da = new DoubleAnimation();
             da.From = 0;
             da.To = 360;
             da.Duration = new Duration(new TimeSpan(0, 0, 2));
-            da.EasingFunction = new PowerEase() { EasingMode = EasingMode.EaseInOut};
+            da.EasingFunction = new PowerEase() { EasingMode = EasingMode.EaseInOut };
             da.RepeatBehavior = RepeatBehavior.Forever;
             sb.Children.Add(da);
             Storyboard.SetTargetProperty(da, new PropertyPath("RenderTransform.Angle"));
 
             BeginStoryboard bsb = new BeginStoryboard();
             bsb.Storyboard = sb;
+
             EventTrigger trig = new EventTrigger(Control.LoadedEvent);
             trig.Actions.Add(bsb);
 
             Style st = new Style(typeof(Rectangle));
             st.Triggers.Add(trig);
-            rectangle.SetValue(Rectangle.StyleProperty, st);
+            rectangle.SetValue(Rectangle.StyleProperty, st); 
+            #endregion
+
+            Storyboard sb1 = new Storyboard();
+            DoubleAnimation da1 = new DoubleAnimation();
+            da1.From = 0;
+            da1.To = 360;
+            da1.Duration = new Duration(new TimeSpan(0, 0, 2));
+            da1.EasingFunction = new PowerEase() { EasingMode = EasingMode.EaseInOut};
+            da1.RepeatBehavior = RepeatBehavior.Forever;
+            sb1.Children.Add(da1);
+            Storyboard.SetTargetProperty(da1, new PropertyPath("RenderTransform.Children[0].Angle"));
+
+            DoubleAnimation da2 = new DoubleAnimation();
+            da2.From = 0.9;
+            da2.To = 0.2;
+            da2.Duration = new Duration(new TimeSpan(0, 0, 2));
+            da2.EasingFunction = new PowerEase() { EasingMode = EasingMode.EaseInOut };
+            da2.RepeatBehavior = RepeatBehavior.Forever;
+            da2.AutoReverse = true;
+            sb1.Children.Add(da2);
+            Storyboard.SetTargetProperty(da2, new PropertyPath("RenderTransform.Children[1].ScaleX"));
+
+            DoubleAnimation da3 = new DoubleAnimation();
+            da3.From = 0.9;
+            da3.To = 0.2;
+            da3.Duration = new Duration(new TimeSpan(0, 0, 2));
+            da3.EasingFunction = new PowerEase() { EasingMode = EasingMode.EaseInOut };
+            da3.RepeatBehavior = RepeatBehavior.Forever;
+            da3.AutoReverse = true;
+            sb1.Children.Add(da3);
+            Storyboard.SetTargetProperty(da3, new PropertyPath("RenderTransform.Children[1].ScaleY"));
+
+            BeginStoryboard bsb1 = new BeginStoryboard();
+            bsb1.Storyboard = sb1;
+
+            EventTrigger trig1 = new EventTrigger(Control.LoadedEvent);
+            trig1.Actions.Add(bsb1);
+
+            Style st1 = new Style(typeof(Rectangle));
+            st1.Triggers.Add(trig1);
+            rectangle1.SetValue(Rectangle.StyleProperty, st1); 
 
             Trigger tg = new Trigger();
             tg.Property = ContentControl.ContentProperty;
