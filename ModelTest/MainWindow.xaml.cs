@@ -34,7 +34,6 @@ namespace ModelTest
             //System.Windows.Controls.Primitives.Popup p = new System.Windows.Controls.Primitives.Popup();
             //p.Placement = System.Windows.Controls.Primitives.PlacementMode.Center
             sw.Start();
-            NTW.Presentation.Presentation.Generation(t => t == typeof(ModelTest.Test.Presentation) || t == typeof(ModelTest.Test.ChildrenMyInterface) || t == typeof(ModelTest.Test.Children2MyInterface));
             this.DataContext = new Test.Presentation();
         }
 

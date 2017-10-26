@@ -22,6 +22,7 @@ namespace ModelTest.Test
 
         public Presentation()
         {
+            Enum = Aenum.a2;
             ValueClass = new PresentationItem();
             presGeneric = new PresentationGeneric<int>();
             presGenericString = new PresentationGeneric<string>();
@@ -166,7 +167,14 @@ namespace ModelTest.Test
 
                                     Change("ValueInterface");
                                 }, null));
+
+            ValueStructure = new PresentatinoStructure() { ValuePresentationItem = new PresentationItem() };
         }
+
+        #region structure
+        [PresentationGroupInfo(GroupName = "Structure")]
+        public PresentatinoStructure ValueStructure { get; set; }
+        #endregion
 
         #region Simple
         [PresentationGroupInfo(GroupName = "Simple values")]
@@ -204,22 +212,22 @@ namespace ModelTest.Test
         public string ValueString { get; set; }
 
         [PresentationGroupInfo(GroupName = "Simple values")]
-        public bool ValueBool { get; set; } 
+        public bool ValueBool { get; set; }
         #endregion
 
         #region Enum
         [PresentationGroupInfo(GroupName = "Enum")]
-        public Aenum Enum { get; set; } 
+        public Aenum Enum { get; set; }
         #endregion
 
         #region Class
         [PresentationGroupInfo(GroupName = "Class")]
         [PresentationBinding]
-        public PresentationItem ValueClass 
+        public PresentationItem ValueClass
         {
-            get { Thread.Sleep(15000); return p; }
+            get { Thread.Sleep(5000); return p; }
             set { p = value; }
-        } 
+        }
         #endregion
 
         #region Generic
@@ -231,7 +239,7 @@ namespace ModelTest.Test
         public PresentationGeneric<PresentationItem> presGenericPresentationItem { get; set; }
 
         [PresentationGroupInfo(GroupName = "Generic")]
-        public PresentationGeneric<int, PresentationGeneric<bool>> presGeneric1 { get; set; } 
+        public PresentationGeneric<int, PresentationGeneric<bool>> presGeneric1 { get; set; }
         #endregion
 
         #region Array
@@ -366,6 +374,15 @@ namespace ModelTest.Test
         }
 
         #endregion
+    }
+
+    public struct PresentatinoStructure
+    {
+        public int ValueInt { get; set; }
+
+        public string ValueString { get; set; }
+
+        public PresentationItem ValuePresentationItem { get; set;}
     }
 
     public class Command : ICommand

@@ -38,23 +38,26 @@ namespace NTW.Presentation.Construction
 
             if (nonPresenatry == null)
             {
-                result.Add(type);
-                foreach (var property in type.GetProperties())
-                    if (!SimpleTypes.Contains(property.PropertyType) && property.PropertyType != typeof(object))
-                    {
-                        if (property.PropertyType.IsArray)
-                            result.AddRange(GetTypes(property.PropertyType.GetElementType()));
-                        else if (property.PropertyType.GetInterface(typeof(IList).Name) != null)
-                            result.AddRange(GetTypes(property.PropertyType.GetElementType() == null ? property.PropertyType.GetGenericArguments()[0] : property.PropertyType.GetElementType()));
-                        else if (property.PropertyType.IsGenericType)
+                if (!SimpleTypes.Contains(type) && type != typeof(object) && !type.IsEnum)
+                {
+                    result.Add(type);
+                    foreach (var property in type.GetProperties())
+                        if (!SimpleTypes.Contains(property.PropertyType) && property.PropertyType != typeof(object) && !property.PropertyType.IsEnum)
                         {
-                            foreach (var t in property.PropertyType.GetGenericArguments())
-                                if (!SimpleTypes.Contains(t) && t != typeof(object))
-                                    result.AddRange(GetTypes(t));
-                        }
+                            if (property.PropertyType.IsArray)
+                                result.AddRange(GetTypes(property.PropertyType.GetElementType()));
+                            else if (property.PropertyType.GetInterface(typeof(IList).Name) != null)
+                                result.AddRange(GetTypes(property.PropertyType.GetElementType() == null ? property.PropertyType.GetGenericArguments()[0] : property.PropertyType.GetElementType()));
+                            else if (property.PropertyType.IsGenericType)
+                            {
+                                foreach (var t in property.PropertyType.GetGenericArguments())
+                                    if (!SimpleTypes.Contains(t) && t != typeof(object))
+                                        result.AddRange(GetTypes(t));
+                            }
 
                             result.AddRange(GetTypes(property.PropertyType));
-                    }
+                        }
+                }
             }
             return result;
         }
@@ -93,6 +96,10 @@ namespace NTW.Presentation.Construction
         {
             if (type == typeof(String))
                 return null;
+            else if (type.IsValueType && !type.IsEnum)
+            {
+                return CreateTemplateClass(type);
+            }
             else if (type.IsClass)
             {
                 if (type.IsArray)
@@ -280,12 +287,14 @@ namespace NTW.Presentation.Construction
             rectangle.SetValue(Rectangle.StyleProperty, st); 
             #endregion
 
+            #region style-rec2
+            #region sb1
             Storyboard sb1 = new Storyboard();
             DoubleAnimation da1 = new DoubleAnimation();
             da1.From = 0;
             da1.To = 360;
             da1.Duration = new Duration(new TimeSpan(0, 0, 2));
-            da1.EasingFunction = new PowerEase() { EasingMode = EasingMode.EaseInOut};
+            da1.EasingFunction = new PowerEase() { EasingMode = EasingMode.EaseInOut };
             da1.RepeatBehavior = RepeatBehavior.Forever;
             sb1.Children.Add(da1);
             Storyboard.SetTargetProperty(da1, new PropertyPath("RenderTransform.Children[0].Angle"));
@@ -309,9 +318,11 @@ namespace NTW.Presentation.Construction
             da3.AutoReverse = true;
             sb1.Children.Add(da3);
             Storyboard.SetTargetProperty(da3, new PropertyPath("RenderTransform.Children[1].ScaleY"));
+            #endregion
 
             BeginStoryboard bsb1 = new BeginStoryboard();
-            bsb1.Storyboard = sb1;
+            bsb1.Storyboard = sb1; 
+            #endregion
 
             EventTrigger trig1 = new EventTrigger(Control.LoadedEvent);
             trig1.Actions.Add(bsb1);
@@ -341,7 +352,7 @@ namespace NTW.Presentation.Construction
                 Property.SetBinding(TextBlock.TextProperty, new Binding(property.Name) {
                     UpdateSourceTrigger = UpdateSourceTrigger.PropertyChanged,
                     Mode = BindingMode.OneWay, 
-                    IsAsync = pBind != null ? pBind.IsAsync: false
+                    IsAsync = (pBind != null ? pBind.IsAsync: false)
                 });
             }
             else
@@ -349,11 +360,11 @@ namespace NTW.Presentation.Construction
                 if (property.PropertyType == typeof(bool))
                 {
                     Property = new FrameworkElementFactory(typeof(ToggleButton));
-                    Property.SetBinding(ToggleButton.ContentProperty, new Binding(property.Name) { IsAsync = true });
+                    Property.SetBinding(ToggleButton.ContentProperty, new Binding(property.Name) { UpdateSourceTrigger = UpdateSourceTrigger.PropertyChanged});
                     Property.SetBinding(CheckBox.IsCheckedProperty, new Binding(property.Name) {
                         UpdateSourceTrigger = UpdateSourceTrigger.PropertyChanged,
                         Mode = BindingMode.TwoWay,
-                        IsAsync = pBind != null ? pBind.IsAsync : false
+                        IsAsync = (pBind != null ? pBind.IsAsync : false)
                     });
                 }
                 else
@@ -362,7 +373,7 @@ namespace NTW.Presentation.Construction
                     Property.SetBinding(TextBox.TextProperty, new Binding(property.Name) {
                         UpdateSourceTrigger = UpdateSourceTrigger.PropertyChanged,
                         Mode = BindingMode.TwoWay,
-                        IsAsync = pBind != null ? pBind.IsAsync : false
+                        IsAsync = (pBind != null ? pBind.IsAsync : false)
                     });
                 }
             }
@@ -383,15 +394,15 @@ namespace NTW.Presentation.Construction
             }
             else {
                 Property = new FrameworkElementFactory(typeof(ComboBox));
-                Property.SetResourceReference(ComboBox.DataContextProperty, property.PropertyType.FullName);
-                Property.SetBinding(ComboBox.ItemsSourceProperty, new Binding(".") { IsAsync = true });
-
                 EnumBuilder.AddEnumResource(property.PropertyType);
+                Property.SetResourceReference(ComboBox.DataContextProperty, property.PropertyType.FullName);
+
+                Property.SetBinding(ComboBox.ItemsSourceProperty, new Binding("."));
 
                 Property.SetBinding(ComboBox.SelectedValueProperty, new Binding("DataContext." + property.Name) {
                     ElementName = "BackPanel",
                     UpdateSourceTrigger = UpdateSourceTrigger.PropertyChanged,
-                    IsAsync = pBind != null ? pBind.IsAsync : false
+                    IsAsync = (pBind != null ? pBind.IsAsync : false)
                 });
             }
             return Property;
@@ -415,7 +426,7 @@ namespace NTW.Presentation.Construction
             }
 
             Property.SetValue(ContentControl.PaddingProperty, new Thickness(20, 0, 0, 0));
-            Property.SetBinding(ContentControl.ContentProperty, new Binding(PropertyName) { IsAsync = pbind != null ? pbind.IsAsync : false});
+            Property.SetBinding(ContentControl.ContentProperty, new Binding(PropertyName) { IsAsync = (pbind != null ? pbind.IsAsync : false)});
             if (pbind != null && pbind.IsAsync)
                 Property.SetResourceReference(ContentControl.StyleProperty, "IsAsyncStyle");
             Property.SetValue(ContentControl.HorizontalContentAlignmentProperty, System.Windows.HorizontalAlignment.Stretch);
@@ -436,7 +447,7 @@ namespace NTW.Presentation.Construction
                 Property.SetBinding(BaseItemsControl.ContextProperty, new Binding(".") { IsAsync = pbind != null ? pbind.IsAsync : false});
 
                 if (AType.BaseType == typeof(Enum)) {
-                    AddTemplateEnumToResource(AType);
+                    AddTemplateEnumToResource(AType, "T");
                     Property.SetResourceReference(ItemsControl.ItemTemplateProperty, "T_" + AType.FullName);
                 }
                 else if (AType == typeof(bool))
@@ -473,8 +484,8 @@ namespace NTW.Presentation.Construction
             else
                 Property.SetBinding(BaseItemsControl.ItemsSourceProperty, new Binding(".") { IsAsync = pbind != null ? pbind.IsAsync : false });
             if (AType.BaseType == typeof(Enum)) {
-                AddTemplateEnumToResource(AType, true);
-                Property.SetResourceReference(ItemsControl.ItemTemplateProperty, "T_" + AType.FullName);
+                AddTemplateEnumToResource(AType, "L", true);
+                Property.SetResourceReference(ItemsControl.ItemTemplateProperty, "L_" + AType.FullName);
             }
             else if (AType == typeof(bool))
                 Property.SetResourceReference(ItemsControl.ItemTemplateProperty, "ItemBoolenD");
@@ -503,8 +514,8 @@ namespace NTW.Presentation.Construction
             else
                 Property.SetBinding(BaseItemsControl.ItemsSourceProperty, new Binding(".") { IsAsync = pbind != null ? pbind.IsAsync : false });
             if (AType.BaseType == typeof(Enum)) {
-                AddTemplateEnumToResource(AType, true);
-                Property.SetResourceReference(ItemsControl.ItemTemplateProperty, "T_" + AType.FullName);
+                AddTemplateEnumToResource(AType, "L", true);
+                Property.SetResourceReference(ItemsControl.ItemTemplateProperty, "L_" + AType.FullName);
             }
             else if (AType == typeof(bool))
                 Property.SetResourceReference(ItemsControl.ItemTemplateProperty, "ItemBoolenD");
@@ -670,8 +681,8 @@ namespace NTW.Presentation.Construction
             Property.SetValue(Label.HorizontalContentAlignmentProperty, HorizontalAlignment.Stretch);
 
             if (type.BaseType == typeof(Enum)) {
-                AddTemplateEnumToResource(type, true);
-                Property.SetResourceReference(Label.ContentTemplateProperty, "T_" + type.FullName);
+                AddTemplateEnumToResource(type, "L", true);
+                Property.SetResourceReference(Label.ContentTemplateProperty, "L_" + type.FullName);
             }
             else if (type == typeof(bool))
                 Property.SetResourceReference(Label.ContentTemplateProperty, "ItemBoolen");
@@ -758,9 +769,9 @@ namespace NTW.Presentation.Construction
         }
         #endregion
 
-        internal static void AddTemplateEnumToResource(Type i, bool delete = false) {
-            if (Application.Current.TryFindResource("T_" + i.FullName) == null)
-                Application.Current.Resources.Add("T_" + i.FullName, CreateEnumTemplate(i, delete));
+        internal static void AddTemplateEnumToResource(Type i, string pref, bool delete = false) {
+            if (Application.Current.TryFindResource(pref + "_" + i.FullName) == null)
+                Application.Current.Resources.Add(pref + "_" + i.FullName, CreateEnumTemplate(i, delete));
         }
 
         internal static void CreateDynamicResource(Func<Type, bool> condition)
@@ -777,7 +788,7 @@ namespace NTW.Presentation.Construction
 
             app.Resources.Add("ItemClassD", GenerateItemClassTemplateFromDelete());
 
-            var types = GetTypes(condition);
+            var items = GetTypes(condition);
             foreach (Type i in GetTypes(condition))
                 if (Application.Current.TryFindResource(new DataTemplateKey(i)) == null)
                 {
