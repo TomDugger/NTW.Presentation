@@ -10,7 +10,7 @@ using NTW.Commands;
 
 namespace NTW.Presentation
 {
-    internal class BaseItemsControl : ItemsControl
+    internal class BaseItemsControl : ListBox
     {
 
         public static readonly DependencyProperty ContextProperty =

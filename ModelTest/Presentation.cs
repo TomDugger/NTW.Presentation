@@ -60,7 +60,7 @@ namespace ModelTest.Test
                 new PresentationGeneric<string>() { Value = "имя" }
             };
 
-            ValueGenericListString = new PresentationList<string>() { "newname", "newname1" };
+            ValueGenericListString = new PresentationList<string>() { "newname", "newname1", "uhjkhkjh" };
 
             ValueGenericListPresentationItem = new PresentationList<PresentationItem>() { 
                 new PresentationItem() { ItemName = "Item 1", ItemValue = 12.5 },
@@ -225,7 +225,7 @@ namespace ModelTest.Test
         [PresentationBinding]
         public PresentationItem ValueClass
         {
-            get { Thread.Sleep(5000); return p; }
+            get { Thread.Sleep(15000); return p; }
             set { p = value; }
         }
         #endregion

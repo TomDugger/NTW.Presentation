@@ -152,7 +152,6 @@ namespace NTW.Presentation.Construction
 
                     NonPresentation nattr = attributes.Find((x) => x is NonPresentation) as NonPresentation;
                     PresentationInfo pAttr = attributes.Find((x) => x is PresentationInfo) as PresentationInfo;
-                    PresentationCollectionInfo pcAttr = attributes.Find((x) => x is PresentationCollectionInfo) as PresentationCollectionInfo;
                     PresentationMarginInfo pmAttr = attributes.Find((x) => x is PresentationMarginInfo) as PresentationMarginInfo;
                     PresentationGroupInfo pgi = attributes.Find((x) => x is PresentationGroupInfo) as PresentationGroupInfo;
                     PresentationBinding pbind = attributes.Find((x) => x is PresentationBinding) as PresentationBinding;
@@ -425,7 +424,7 @@ namespace NTW.Presentation.Construction
                     Property.SetValue(ContentControl.MaxWidthProperty, pinfo.MaxWidth);
             }
 
-            Property.SetValue(ContentControl.PaddingProperty, new Thickness(20, 0, 0, 0));
+            Property.SetValue(ContentControl.MarginProperty, new Thickness(20, 0, 0, 0));
             Property.SetBinding(ContentControl.ContentProperty, new Binding(PropertyName) { IsAsync = (pbind != null ? pbind.IsAsync : false)});
             if (pbind != null && pbind.IsAsync)
                 Property.SetResourceReference(ContentControl.StyleProperty, "IsAsyncStyle");
@@ -435,18 +434,21 @@ namespace NTW.Presentation.Construction
 
         private static FrameworkElementFactory CreateArrayType(Type property)
         {
-            PresentationBinding pbind = System.Attribute.GetCustomAttributes(property).ToList().Find((x) => x is PresentationBinding) as PresentationBinding; 
+            var listatt = System.Attribute.GetCustomAttributes(property).ToList();
+            PresentationBinding pbind = listatt.Find((x) => x is PresentationBinding) as PresentationBinding;
             Type AType = property.GetElementType();
-            if (SimpleTypes.Contains(AType) || AType.BaseType == typeof(Enum)) {
+            if (SimpleTypes.Contains(AType) || AType.BaseType == typeof(Enum))
+            {
                 Type BType = typeof(ArrayItemsControl<>).MakeGenericType(AType);
                 FrameworkElementFactory Property = new FrameworkElementFactory(BType);
                 Property.SetValue(ScrollViewer.HorizontalScrollBarVisibilityProperty, ScrollBarVisibility.Disabled);
                 Property.SetValue(ItemsControl.PaddingProperty, new Thickness(20, 0, 0, 0));
 
                 Property.SetValue(ItemsControl.HorizontalContentAlignmentProperty, HorizontalAlignment.Stretch);
-                Property.SetBinding(BaseItemsControl.ContextProperty, new Binding(".") { IsAsync = pbind != null ? pbind.IsAsync : false});
+                Property.SetBinding(BaseItemsControl.ContextProperty, new Binding(".") { IsAsync = pbind != null ? pbind.IsAsync : false });
 
-                if (AType.BaseType == typeof(Enum)) {
+                if (AType.BaseType == typeof(Enum))
+                {
                     AddTemplateEnumToResource(AType, "T");
                     Property.SetResourceReference(ItemsControl.ItemTemplateProperty, "T_" + AType.FullName);
                 }
@@ -457,7 +459,8 @@ namespace NTW.Presentation.Construction
 
                 return Property;
             }
-            else {
+            else
+            {
                 FrameworkElementFactory Property = new FrameworkElementFactory(typeof(ItemsControl));
                 Property.SetValue(ScrollViewer.HorizontalScrollBarVisibilityProperty, ScrollBarVisibility.Disabled);
                 Property.SetValue(ItemsControl.PaddingProperty, new Thickness(20, 0, 0, 0));
@@ -499,7 +502,9 @@ namespace NTW.Presentation.Construction
 
         private static FrameworkElementFactory CreateListGenericType(Type property)
         {
-            PresentationBinding pbind = System.Attribute.GetCustomAttributes(property).ToList().Find((x) => x is PresentationBinding) as PresentationBinding;
+            var listatt = System.Attribute.GetCustomAttributes(property).ToList();
+            PresentationBinding pbind = listatt.Find((x) => x is PresentationBinding) as PresentationBinding;
+            PresentationCollectionInfo pcinf = listatt.Find((x) => x is PresentationCollectionInfo) as PresentationCollectionInfo;
 
             Type AType = property.GetGenericArguments()[0];
             Type BType = typeof(ListGenericItemsControl<>).MakeGenericType(AType);
@@ -508,22 +513,33 @@ namespace NTW.Presentation.Construction
             Property.SetValue(ScrollViewer.HorizontalScrollBarVisibilityProperty, ScrollBarVisibility.Disabled);
             Property.SetValue(ItemsControl.HorizontalContentAlignmentProperty, HorizontalAlignment.Stretch);
             Property.SetValue(ItemsControl.PaddingProperty, new Thickness(20, 0, 0, 0));
+            Property.SetValue(ItemsControl.BackgroundProperty, new SolidColorBrush(Colors.Black));
 
             if (SimpleTypes.Contains(AType) || AType.BaseType == typeof(Enum))
                 Property.SetBinding(BaseItemsControl.ContextProperty, new Binding(".") { UpdateSourceTrigger = UpdateSourceTrigger.PropertyChanged, IsAsync = pbind != null ? pbind.IsAsync : false });
             else
                 Property.SetBinding(BaseItemsControl.ItemsSourceProperty, new Binding(".") { IsAsync = pbind != null ? pbind.IsAsync : false });
-            if (AType.BaseType == typeof(Enum)) {
-                AddTemplateEnumToResource(AType, "L", true);
-                Property.SetResourceReference(ItemsControl.ItemTemplateProperty, "L_" + AType.FullName);
+            if (pcinf != null && pcinf.ItemTemplate != null && Application.Current.TryFindResource(pcinf.ItemTemplate) != null)
+            {
+                Property.SetResourceReference(ItemsControl.ItemTemplateProperty, pcinf.ItemTemplate);
             }
-            else if (AType == typeof(bool))
-                Property.SetResourceReference(ItemsControl.ItemTemplateProperty, "ItemBoolenD");
-            else if (SimpleTypes.Contains(AType))
-                Property.SetResourceReference(ItemsControl.ItemTemplateProperty, "ItemSimpleD");
-            else {
-                Property.SetResourceReference(ItemsControl.ItemTemplateProperty, "ItemClassD");
-            }
+            else
+                if (AType.BaseType == typeof(Enum))
+                {
+                    AddTemplateEnumToResource(AType, "L", true);
+                    Property.SetResourceReference(ItemsControl.ItemTemplateProperty, "L_" + AType.FullName);
+                }
+                else if (AType == typeof(bool))
+                    Property.SetResourceReference(ItemsControl.ItemTemplateProperty, "ItemBoolenD");
+                else if (SimpleTypes.Contains(AType))
+                    Property.SetResourceReference(ItemsControl.ItemTemplateProperty, "ItemSimpleD");
+                else
+                {
+                    Property.SetResourceReference(ItemsControl.ItemTemplateProperty, "ItemClassD");
+                }
+
+            if (pcinf != null && pcinf.ItemStyle != null && Application.Current.TryFindResource(pcinf.ItemStyle) != null)
+                Property.SetResourceReference(ItemsControl.ItemContainerStyleProperty, pcinf.ItemStyle);
             return Property;
         }
 

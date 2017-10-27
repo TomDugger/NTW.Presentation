@@ -8,6 +8,7 @@ using System.Windows;
 using System.ComponentModel;
 using System.Windows.Data;
 using System.Windows.Input;
+using System.Windows.Media;
 
 namespace NTW.Presentation
 {
@@ -21,6 +22,7 @@ namespace NTW.Presentation
         public ListGenericItemsControl() {
             ControlTemplate container = new ControlTemplate(typeof(ListGenericItemsControl<T>));
             FrameworkElementFactory grid = new FrameworkElementFactory(typeof(Grid));
+            grid.SetValue(Grid.BackgroundProperty, new SolidColorBrush(Colors.Transparent));
 
             FrameworkElementFactory ContainerRowProperty = new FrameworkElementFactory(typeof(RowDefinition));
             ContainerRowProperty.SetValue(RowDefinition.HeightProperty, new GridLength(1, GridUnitType.Star));

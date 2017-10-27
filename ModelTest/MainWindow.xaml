@@ -1,7 +1,7 @@
 ﻿<Window x:Class="ModelTest.MainWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        Title="MainWindow" Height="350" Width="525" Loaded="Window_Loaded">
+        Title="MainWindow" Height="350" Width="525" WindowStartupLocation="CenterScreen">
     <Grid>
         <ScrollViewer Grid.Row="1">
             <Label Content="{Binding Path=., IsAsync=True}" HorizontalContentAlignment="Stretch" Name="label" />
